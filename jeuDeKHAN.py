@@ -136,10 +136,11 @@ def possibleMove(pos, board):
                     popCounter += 1 # one more intermidiaire step
     destinationsCopy = list(destinations)
     for (endPoint,_) in destinations:
-        if endPoint in board.piecePos[side*6:(side+1)*6]: # no friendly fire
+        if endPoint in board.piecePos[side*6:(side+1)*6+1]: # no friendly fire, never betray your queen
             destinationsCopy.remove([endPoint,_])
-    if len(destinations):
-        return [x[0] for x in destinationsCopy]
+    if len(destinations)!=0:
+        Tmp = [x[0] for x in destinationsCopy]
+        return Tmp
     return False
     # destinationConverted = []
     # for (endPoint,_) in destinations:
@@ -181,7 +182,7 @@ def allPossibleMove(board,side):
 
 def possibleResurrectTarget(board,side):
     possibleResurrectTargets = []
-    for piece in board.piecePos[side*6:(side+1)*6-1]:#queen cant be reanimate
+    for piece in board.piecePos[side*6:(side+1)*6]:#queen cant be reanimate
         if piece == 44:
             possibleResurrectTargets.append(piece)
             break # only need one
@@ -326,7 +327,7 @@ def minimaxWithAlphaBeta(node, depth, alpha, beta, maximizingPlayer,side,depthCo
             child = Board(node.piecePos, node.Khan)
             move(aMove[0], aMove[1], child, side)
             returnMove = aMove
-            v,_ = minimaxWithAlphaBeta(node, depth - 1, alpha, beta, True, newSide,depthConst,evalFunc)
+            v,_ = minimaxWithAlphaBeta(child, depth - 1, alpha, beta, True, newSide,depthConst,evalFunc)
             beta = min(beta, v)
             if beta<=alpha:
                 break
@@ -351,23 +352,23 @@ def gameIsOver(board):
     return -1
 
 def main():
-    gameBoard = Board([6,7,8,9,10,11,24,25,27,28,29,32])
-    # gameBoard = Board()
-    # initBoard(gameBoard)
+    # gameBoard = Board([6,7,8,9,10,11,24,25,27,28,29,32])
+    gameBoard = Board()
+    initBoard(gameBoard)
     sideToPlay = 0
     roundCount = 0
     AI1Time,AI2Time = 0,0
-    printBoard(gameBoard)
+    # printBoard(gameBoard)
     while True:
-        print("side to play = ", sideToPlay)
+        # print("side to play = ", sideToPlay)
         start = clock()
         # printBoard(gameBoard)
         if sideToPlay==0:
-            AImove = generateMove(gameBoard, sideToPlay, 3, True,evaluate)
+            AImove = generateMove(gameBoard, sideToPlay, 4, True,evaluate)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # userMove(gameBoard, sideToPlay)
         else:
-            AImove = generateMove(gameBoard, sideToPlay,5,True,evaluate)
+            AImove = generateMove(gameBoard, sideToPlay,3,False,evaluate)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # print(AImove)
 
@@ -381,7 +382,7 @@ def main():
             AI2Time+=end-start
         sideToPlay = (sideToPlay + 1) % 2
         if loser!=-1:
-            printBoard(gameBoard)
+            # printBoard(gameBoard)
             print("GAME OVER, player "+str((loser+1)%2)+" wins in "+str(roundCount)+" rounds")
             del gameBoard
             return (loser+1)%2, roundCount,AI1Time,AI2Time
@@ -402,7 +403,7 @@ def AiVSAI():
     print(result)
 
 AiVSAI()
-print("ab3 VS ab5")
+print("ab4 VS no ab3")
 
 
 def clickAt(pos):

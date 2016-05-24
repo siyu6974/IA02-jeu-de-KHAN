@@ -14,3 +14,7 @@ print winnerList.count(0)
 print sum([x[3] for x in L])
 print winnerList.count(1)
 #3 VS 5
+
+a = [0,1,2,3,4]
+for p in a[0:3]:
+    print p
