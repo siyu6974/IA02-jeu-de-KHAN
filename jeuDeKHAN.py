@@ -6,6 +6,7 @@
 # 2,1,3,2,2,1
 from __future__ import print_function
 import random
+from Tkinter import *
 class Board:
     terrainMap = [2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]
     Khan = 0
@@ -72,13 +73,13 @@ def printBoard(gameBoard):
         print("")
     for piece in gameBoard.piecePos[0:5]:
         if piece == 44:
-            print("o ",end="     ")
+            print("o ",end=" ")
+    print("   ", end=" ")
     for piece in gameBoard.piecePos[6:11]:
         if piece == 44:
-            print("x ", end="")
+            print("x ", end=" ")
     print("")
-# for piece in gameBoard.piecePos:
-    # print convertCoord(piece)
+
 def up(n):
     tmp = n-6
     if tmp>0:
@@ -158,18 +159,25 @@ def _movablePiece(board, side): #  judgement only by KHAN, can be wrong
 def allPossibleMove(board,side):
     allPossibleMoves = []
     (MovablePieces, KHANsucks) = _movablePiece(board,side)
-    if KHANsucks:
-        possibleResurrectTargets=possibleResurrectTarget(board, side)
-        if len(possibleResurrectTargets):
-            for aPossibleResurrectionPos in possibleResurrectionPostion(board):
-                allPossibleMoves.append((44, aPossibleResurrectionPos))
-    for aMovablePiece in MovablePieces:
-        if aMovablePiece != 44:
-            posibleMoves = possibleMove(aMovablePiece, board)
-            if posibleMoves: # really movable
-                for aPossibleMove in posibleMoves:
-                    allPossibleMoves.append((aMovablePiece, aPossibleMove))
+    while True:
+        if KHANsucks:
+            possibleResurrectTargets=possibleResurrectTarget(board, side)
+            if len(possibleResurrectTargets):
+                for aPossibleResurrectionPos in possibleResurrectionPostion(board):
+                    allPossibleMoves.append((44, aPossibleResurrectionPos))
+        for aMovablePiece in MovablePieces:
+            if aMovablePiece != 44:
+                posibleMoves = possibleMove(aMovablePiece, board)
+                if posibleMoves: # really movable
+                    for aPossibleMove in posibleMoves:
+                        allPossibleMoves.append((aMovablePiece, aPossibleMove))
+        if len(allPossibleMoves) == 0:  # not obeying KHAN because of blockage
+            KHANsucks = True
+            MovablePieces = list(board.piecePos[side * 6:(side + 1) * 6])
+        else:
+            break
     return allPossibleMoves
+
 def possibleResurrectTarget(board,side):
     possibleResurrectTargets = []
     for piece in board.piecePos[side*6:(side+1)*6-1]:#queen cant be reanimate
@@ -287,11 +295,11 @@ def minimax(node, depth, maximizingPlayer,board,side):
             bestValue = min(bestValue, v)
         return bestValue
 
-def generateMove(board,sideToPlay):
+def generateMove(board,sideToPlay,depth=3):
     allPossibleMoves = allPossibleMove(board,sideToPlay)
     moveScores = []
     for aPossibleMove in allPossibleMoves:
-        moveScores.append(minimax([aPossibleMove],3,True,board,sideToPlay))
+        moveScores.append(minimax([aPossibleMove],depth,True,board,sideToPlay))
     bestMove = allPossibleMoves[moveScores.index(max(moveScores))]
     return bestMove
 
@@ -305,20 +313,20 @@ def main():
     # gameBoard = Board([6,7,8,9,10,11,24,25,27,28,29,26])
     gameBoard = Board()
     initBoard(gameBoard)
-    print(gameBoard.piecePos)
+    # print(gameBoard.piecePos)
     sideToPlay = 0
     #print(gameBoard.piecePos)
     #print(possibleMove(gameBoard.piecePos[0],gameBoard))
-    gameBoard.printPiecePos()
+    # gameBoard.printPiecePos()
     while True:
-        printBoard(gameBoard)
+        # printBoard(gameBoard)
         print("KHAN = ",gameBoard.Khan)
         print("side to play = ",sideToPlay)
         # print(mobilityScore(gameBoard,0))
         # print(mobilityScore(gameBoard,1))
         # print(allPossibleMove(gameBoard,sideToPlay))
         if sideToPlay==0:
-            AImove = generateMove(gameBoard, sideToPlay)
+            AImove = generateMove(gameBoard, sideToPlay, 2)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # userMove(gameBoard, sideToPlay)
         else:
@@ -326,10 +334,25 @@ def main():
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # print(AImove)
         sideToPlay = (sideToPlay + 1) % 2
-        gameOver = gameIsOver(gameBoard)
-        if gameOver!=-1:
-            printBoard(gameBoard)
-            print("GAME OVER, side "+str(gameOver)+" loses")
+        loser = gameIsOver(gameBoard)
+        if loser!=-1:
+            # printBoard(gameBoard)
+            print("GAME OVER, side "+str((loser+1)%2)+" loses")
+            del gameBoard
             break
 
-main()
+# main()
+def AiVSAI():
+    result = []
+    for i in range(100):
+        print(i)
+        result.append(main())
+    print(result.count(0))
+
+AiVSAI()
+
+def mainWithUI():
+    fen1 = Tk()
+    fen1.title("Jeu de KHAN")
+    can1 = Canvas(fen1, bg='white', height=200, width=200)
+    can1.pack(side=LEFT)
