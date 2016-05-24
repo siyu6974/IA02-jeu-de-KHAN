@@ -15,13 +15,13 @@ printBattleField(Line,Row,BF) :- write(Line), Pos is (Line * 6 + Row),
 printBattleField(Line,Row,BF) :- write(Line),  Pos is (Line * 6 + Row),
 									sublistOf(7,11,BF,Sublist),member(Pos,Sublist),write('x'),!.
 printBattleField(Line,Row,BF) :- write(Line), Pos is (Line * 6 + Row),
-									write('-').
+									write('_').
 
 
 board([2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1],[P0,P1,P2,P3,P4,Q1,P6,P7,P8,P9,P10,Q2],KHAN).
 
-afficherBoard:-board(TerrainMap,_,_),printMatrix(TerrainMap,6),board(_,BF,_),printBattleField(-1,0,BF).
-
+afficherBoard:-initBoard,board(TerrainMap,_,_),printMatrix(TerrainMap,6),board(_,BF,_),findall(_,printBattleField(-1,0,BF),_).
+test:-initBoard,board(_,T,_),printMatrix(T,6).
 initBoard :-
     board(_,[24, 31, 18, 19, 1, 25, 16, 35, 17, 10, 5, 23],_).
     % printf("Enter the position of the %d pawn", N),

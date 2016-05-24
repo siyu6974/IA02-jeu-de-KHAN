@@ -7,6 +7,7 @@
 from __future__ import print_function
 import random
 from Tkinter import *
+from time import clock
 class Board:
     terrainMap = [2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]
     Khan = 0
@@ -39,7 +40,6 @@ def rotateProjection(coor,n):
     return rotateProjection(y*6+6-1-x,n-1)
 def initBoard(board):
     face = random.randint(0, 3)
-    # print(face)
     for i in range(0,6):
         tmp = rotateProjection(random.randint(0, 11), face)
         while tmp in board.piecePos:
@@ -51,6 +51,7 @@ def initBoard(board):
             tmp = rotateProjection(random.randint(0, 11), (face+2)%4)
         board.piecePos[i] = tmp
 def printBoard(gameBoard):
+    print("KHAN = ", gameBoard.Khan)
     print("                  A B C D E F")
     for i in range(0,6):
         for j in range(0,6):
@@ -78,7 +79,7 @@ def printBoard(gameBoard):
     for piece in gameBoard.piecePos[6:11]:
         if piece == 44:
             print("x ", end=" ")
-    print("")
+    print();
 
 def up(n):
     tmp = n-6
@@ -176,7 +177,7 @@ def allPossibleMove(board,side):
             MovablePieces = list(board.piecePos[side * 6:(side + 1) * 6])
         else:
             break
-    return allPossibleMoves
+    return list(set(allPossibleMoves))
 
 def possibleResurrectTarget(board,side):
     possibleResurrectTargets = []
@@ -247,7 +248,7 @@ def userMove(board,side):
     flag = False
     hint = [convertCoordAlphaNum(x) for x in _movablePiece(board,side)[0]]
     while not flag:
-        command = raw_input("next? "+', '.join(hint))
+        command = raw_input("next? "+', '.join(hint)+' ')
         (pieceToMove,dest)=moveInterpreter(command)
         if (pieceToMove,dest)!=(-1,-1) :
             flag = move(pieceToMove, dest, board, side)
@@ -271,38 +272,77 @@ def evaluate(board,side):
     # return 0.2*(mobilityScore(board,side)-mobilityScore(board,otherSide))\
     #        +materialScore(board,side)-materialScore(board,otherSide)
     return materialScore(board, side) - materialScore(board, otherSide)
+def evaluate2(board,side):
+    otherSide = (side+1) % 2
+    return 0.2*(mobilityScore(board,side)-mobilityScore(board,otherSide))\
+            +materialScore(board,side)-materialScore(board,otherSide)
 
-def minimax(node, depth, maximizingPlayer,board,side):
+def minimax(node, depth, maximizingPlayer,board,side,evalFunc=evaluate):
     newSide = (side+1) % 2
     if depth == 0:
-        # printBoard(board)
-        return evaluate(board,(int(not maximizingPlayer)+side)%2)
+        return evalFunc(board,(int(not maximizingPlayer)+side)%2)
     if maximizingPlayer:
         bestValue = -10000
         for child in node:
             clone = Board(board.piecePos, board.Khan)
             move(child[0],child[1],clone,side)
-            # printBoard(board)
-            v = minimax(allPossibleMove(clone,newSide), depth - 1, False, clone, newSide)
+            v = minimax(allPossibleMove(clone,newSide), depth - 1, False, clone, newSide,evalFunc)
             bestValue = max(bestValue, v)
-            # print(bestValue)
         return bestValue
     else:#    (* minimizing player *)
         bestValue = 10000
         for child in node:
             clone = Board(board.piecePos, board.Khan)
             move(child[0], child[1], clone, side)
-            v = minimax(allPossibleMove(clone,newSide), depth - 1, True, clone, newSide)
+            v = minimax(allPossibleMove(clone,newSide), depth - 1, True, clone, newSide,evalFunc)
             bestValue = min(bestValue, v)
         return bestValue
 
-def generateMove(board,sideToPlay,depth=3):
-    allPossibleMoves = allPossibleMove(board,sideToPlay)
+def minimaxWithAlphaBeta(node, depth, alpha, beta, maximizingPlayer,side,depthConst,evalFunc):
+    newSide = (side+1) % 2
+    returnMove = (36,36)
+    if depth == 0:
+        return evalFunc(node,(int(not maximizingPlayer)+side)%2),returnMove
+    if maximizingPlayer:
+        v = -10000
+        aPM = allPossibleMove(node, side)
+        moveSelector = []
+        for aMove in aPM:
+            child = Board(node.piecePos, node.Khan)
+            move(aMove[0], aMove[1],child,side)
+            v,_ = minimaxWithAlphaBeta(child, depth - 1, alpha, beta, False, newSide,depthConst,evalFunc)
+            alpha = max(alpha, v)
+            if depth==depthConst:
+                moveSelector.append(v)
+            if beta<=alpha:
+                break
+        if depth == depthConst:
+            returnMove=aPM[moveSelector.index(max(moveSelector))]
+        return v, returnMove
+    else:#    (* minimizing player *)
+        v = 10000
+        aPM = allPossibleMove(node, side)
+        for aMove in aPM:
+            child = Board(node.piecePos, node.Khan)
+            move(aMove[0], aMove[1], child, side)
+            returnMove = aMove
+            v,_ = minimaxWithAlphaBeta(node, depth - 1, alpha, beta, True, newSide,depthConst,evalFunc)
+            beta = min(beta, v)
+            if beta<=alpha:
+                break
+        return v, returnMove
+
+def generateMove(board,sideToPlay,depth=3,alphaBeta=True,evalFunc=evaluate):
     moveScores = []
-    for aPossibleMove in allPossibleMoves:
-        moveScores.append(minimax([aPossibleMove],depth,True,board,sideToPlay))
-    bestMove = allPossibleMoves[moveScores.index(max(moveScores))]
-    return bestMove
+    if alphaBeta:
+        (tmp,bestMove)=minimaxWithAlphaBeta(board,depth,-10000,10000,True,sideToPlay,depth,evalFunc)
+        return bestMove
+    else:
+        allPossibleMoves = allPossibleMove(board, sideToPlay)
+        for aPossibleMove in allPossibleMoves:
+            moveScores.append(minimax([aPossibleMove],depth,True,board,sideToPlay,evalFunc))
+        bestMove = allPossibleMoves[moveScores.index(max(moveScores))]
+        return bestMove
 
 def gameIsOver(board):
     for side in (0,1):
@@ -311,39 +351,60 @@ def gameIsOver(board):
     return -1
 
 def main():
-    # gameBoard = Board([6,7,8,9,10,11,24,25,27,28,29,26])
-    gameBoard = Board()
-    initBoard(gameBoard)
+    gameBoard = Board([6,7,8,9,10,11,24,25,27,28,29,32])
+    # gameBoard = Board()
+    # initBoard(gameBoard)
     sideToPlay = 0
+    roundCount = 0
+    AI1Time,AI2Time = 0,0
+    printBoard(gameBoard)
     while True:
+        print("side to play = ", sideToPlay)
+        start = clock()
         # printBoard(gameBoard)
-        print("KHAN = ",gameBoard.Khan)
-        print("side to play = ",sideToPlay)
         if sideToPlay==0:
-            AImove = generateMove(gameBoard, sideToPlay, 2)
+            AImove = generateMove(gameBoard, sideToPlay, 3, True,evaluate)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # userMove(gameBoard, sideToPlay)
         else:
-            AImove = generateMove(gameBoard, sideToPlay)
+            AImove = generateMove(gameBoard, sideToPlay,5,True,evaluate)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # print(AImove)
-        sideToPlay = (sideToPlay + 1) % 2
+
+        roundCount+=1
         loser = gameIsOver(gameBoard)
+        end = clock()
+        # print(end - start)
+        if sideToPlay==0:
+            AI1Time+=end-start
+        else:
+            AI2Time+=end-start
+        sideToPlay = (sideToPlay + 1) % 2
         if loser!=-1:
-            # printBoard(gameBoard)
-            print("GAME OVER, player "+str((loser+1)%2)+" wins")
+            printBoard(gameBoard)
+            print("GAME OVER, player "+str((loser+1)%2)+" wins in "+str(roundCount)+" rounds")
             del gameBoard
-            return (loser+1)%2
+            return (loser+1)%2, roundCount,AI1Time,AI2Time
 
 # main()
 def AiVSAI():
     result = []
-    for i in range(100):
-        print(i)
-        result.append(main())
-    print(result.count(0))
+    nb = 100
+    for i in range(nb):
+        print('i = ',i)
+        winner,roundCount,AI1Time,AI2Time=main()
+        while roundCount<3:
+            winner, roundCount,AI1Time,AI2Time = main()
+        result.append([winner,roundCount,AI1Time,AI2Time])
+        # print(AI1Time,AI2Time)
+    winnerList = [x[0] for x in result]
+    print(float(winnerList.count(0))/float(nb))
+    print(result)
 
 AiVSAI()
+print("ab3 VS ab5")
+
+
 def clickAt(pos):
     pass
 def printBoardUI(board):
