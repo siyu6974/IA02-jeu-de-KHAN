@@ -268,8 +268,9 @@ def mobilityScore(board,side):
 
 def evaluate(board,side):
     otherSide = (side+1) % 2
-    return 0.2*(mobilityScore(board,side)-mobilityScore(board,otherSide))\
-           +materialScore(board,side)-materialScore(board,otherSide)
+    # return 0.2*(mobilityScore(board,side)-mobilityScore(board,otherSide))\
+    #        +materialScore(board,side)-materialScore(board,otherSide)
+    return materialScore(board, side) - materialScore(board, otherSide)
 
 def minimax(node, depth, maximizingPlayer,board,side):
     newSide = (side+1) % 2
@@ -313,18 +314,11 @@ def main():
     # gameBoard = Board([6,7,8,9,10,11,24,25,27,28,29,26])
     gameBoard = Board()
     initBoard(gameBoard)
-    # print(gameBoard.piecePos)
     sideToPlay = 0
-    #print(gameBoard.piecePos)
-    #print(possibleMove(gameBoard.piecePos[0],gameBoard))
-    # gameBoard.printPiecePos()
     while True:
         # printBoard(gameBoard)
         print("KHAN = ",gameBoard.Khan)
         print("side to play = ",sideToPlay)
-        # print(mobilityScore(gameBoard,0))
-        # print(mobilityScore(gameBoard,1))
-        # print(allPossibleMove(gameBoard,sideToPlay))
         if sideToPlay==0:
             AImove = generateMove(gameBoard, sideToPlay, 2)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
@@ -337,9 +331,9 @@ def main():
         loser = gameIsOver(gameBoard)
         if loser!=-1:
             # printBoard(gameBoard)
-            print("GAME OVER, side "+str((loser+1)%2)+" loses")
+            print("GAME OVER, player "+str((loser+1)%2)+" wins")
             del gameBoard
-            break
+            return (loser+1)%2
 
 # main()
 def AiVSAI():
@@ -350,9 +344,21 @@ def AiVSAI():
     print(result.count(0))
 
 AiVSAI()
+def clickAt(pos):
+    pass
+def printBoardUI(board):
+    for i in range(6):
+        for j in range(6):
+            Button(text=str(board.TerrainMap[i*6+j]), command=lambda: clickAt(i * 6 + j))
 
 def mainWithUI():
+    gameBoard = Board()
+    initBoard(gameBoard)
+    sideToPlay = 0
     fen1 = Tk()
-    fen1.title("Jeu de KHAN")
-    can1 = Canvas(fen1, bg='white', height=200, width=200)
+    fen1.title("test")
+    can1 = Canvas(fen1, bg='white', height=300, width=300)
     can1.pack(side=LEFT)
+    printBoardUI(gameBoard)
+    fen1.mainloop()
+
