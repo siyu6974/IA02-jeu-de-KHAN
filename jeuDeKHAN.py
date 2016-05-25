@@ -136,7 +136,7 @@ def possibleMove(pos, board):
                     popCounter += 1 # one more intermidiaire step
     destinationsCopy = list(destinations)
     for (endPoint,_) in destinations:
-        if endPoint in board.piecePos[side*6:(side+1)*6+1]: # no friendly fire, never betray your queen
+        if endPoint in board.piecePos[side*6:(side+1)*6]: # no friendly fire, never betray your queen
             destinationsCopy.remove([endPoint,_])
     if len(destinations)!=0:
         Tmp = [x[0] for x in destinationsCopy]
@@ -182,7 +182,7 @@ def allPossibleMove(board,side):
 
 def possibleResurrectTarget(board,side):
     possibleResurrectTargets = []
-    for piece in board.piecePos[side*6:(side+1)*6]:#queen cant be reanimate
+    for piece in board.piecePos[side*6:(side+1)*6-1]:#queen cant be reanimate
         if piece == 44:
             possibleResurrectTargets.append(piece)
             break # only need one
@@ -275,8 +275,9 @@ def evaluate(board,side):
     return materialScore(board, side) - materialScore(board, otherSide)
 def evaluate2(board,side):
     otherSide = (side+1) % 2
-    return 0.2*(mobilityScore(board,side)-mobilityScore(board,otherSide))\
-            +materialScore(board,side)-materialScore(board,otherSide)
+    diffMatS = materialScore(board,side)-materialScore(board,otherSide)
+    diffMobS = mobilityScore(board,side)-mobilityScore(board,otherSide)
+    return diffMatS+0.2*diffMobS
 
 def minimax(node, depth, maximizingPlayer,board,side,evalFunc=evaluate):
     newSide = (side+1) % 2
@@ -311,7 +312,8 @@ def minimaxWithAlphaBeta(node, depth, alpha, beta, maximizingPlayer,side,depthCo
         for aMove in aPM:
             child = Board(node.piecePos, node.Khan)
             move(aMove[0], aMove[1],child,side)
-            v,_ = minimaxWithAlphaBeta(child, depth - 1, alpha, beta, False, newSide,depthConst,evalFunc)
+            tmp = minimaxWithAlphaBeta(child, depth - 1, alpha, beta, False, newSide,depthConst,evalFunc)
+            v = max(v,tmp[0])
             alpha = max(alpha, v)
             if depth==depthConst:
                 moveSelector.append(v)
@@ -326,8 +328,8 @@ def minimaxWithAlphaBeta(node, depth, alpha, beta, maximizingPlayer,side,depthCo
         for aMove in aPM:
             child = Board(node.piecePos, node.Khan)
             move(aMove[0], aMove[1], child, side)
-            returnMove = aMove
-            v,_ = minimaxWithAlphaBeta(child, depth - 1, alpha, beta, True, newSide,depthConst,evalFunc)
+            tmp = minimaxWithAlphaBeta(child, depth - 1, alpha, beta, True, newSide, depthConst, evalFunc)
+            v = min(v,tmp[0])
             beta = min(beta, v)
             if beta<=alpha:
                 break
@@ -352,23 +354,22 @@ def gameIsOver(board):
     return -1
 
 def main():
-    # gameBoard = Board([6,7,8,9,10,11,24,25,27,28,29,32])
+    # gameBoard = Board([6,7,8,9,10,5,22,25,27,28,29,32])
     gameBoard = Board()
     initBoard(gameBoard)
     sideToPlay = 0
     roundCount = 0
     AI1Time,AI2Time = 0,0
-    # printBoard(gameBoard)
     while True:
-        # print("side to play = ", sideToPlay)
+        print("side to play = ", sideToPlay)
         start = clock()
         # printBoard(gameBoard)
         if sideToPlay==0:
-            AImove = generateMove(gameBoard, sideToPlay, 4, True,evaluate)
+            AImove = generateMove(gameBoard, sideToPlay, 3, True,evaluate2)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # userMove(gameBoard, sideToPlay)
         else:
-            AImove = generateMove(gameBoard, sideToPlay,3,False,evaluate)
+            AImove = generateMove(gameBoard, sideToPlay,3,True,evaluate)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # print(AImove)
 
@@ -399,11 +400,23 @@ def AiVSAI():
         result.append([winner,roundCount,AI1Time,AI2Time])
         # print(AI1Time,AI2Time)
     winnerList = [x[0] for x in result]
-    print(float(winnerList.count(0))/float(nb))
-    print(result)
+    print(result);print()
+    print("player 0 winning rate "+str(float(winnerList.count(0))/float(nb)))
+    win0 = []
+    win1 = []
+    for tmp in result:
+        if tmp[0] == 0:
+            win0.append(tmp[1])
+    print("player 0 win in ",float(sum(win0))/len(win0),"rounds")
+    for tmp in result:
+        if tmp[0] == 1:
+            win1.append(tmp[1])
+    print("player 1 win in ", float(sum(win1)) / len(win1),"rounds")
+    print("player 0 thinking time ", sum([x[2] for x in result]))
+    print("player 1 thinking time ", sum([x[3] for x in result]))
 
 AiVSAI()
-print("ab4 VS no ab3")
+print("ab3 mob VS ab3")
 
 
 def clickAt(pos):
