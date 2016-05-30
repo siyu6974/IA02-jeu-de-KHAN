@@ -195,7 +195,7 @@ def possibleResurrectionPostion(board):
                                           possibleResurrectionPostions)
     return possibleResurrectionPostions
 
-def move(pieceToMove,dest,board, side):
+def move(pieceToMove,dest,board, side, check=False):
     #resurrection
     if pieceToMove == 44:
         possibleResurrectTargets = possibleResurrectTarget(board, side)
@@ -208,21 +208,23 @@ def move(pieceToMove,dest,board, side):
             #printBoard(board)
             return True
     #normal move
-    if pieceToMove not in board.piecePos:
-        print("No piece there")
-        return False
-    sideInputed = board.piecePos.index(pieceToMove) // 6
-    if sideInputed != side:
-        print(pieceToMove, "Not yours to play")
-        return False
-    reallyMovablePieces = [x[0] for x in allPossibleMove(board, side)]
-    if pieceToMove not in reallyMovablePieces:
-        print("This piece can not be moved")
-        return False
-    possibleDest = possibleMove(pieceToMove,board)
-    if dest not in possibleDest:
-        print("can not move like that")
-        return False
+    if check:
+        if pieceToMove not in board.piecePos:
+            print("No piece there")
+            return False
+        sideInputed = board.piecePos.index(pieceToMove) // 6
+        if sideInputed != side:
+            print(pieceToMove, "Not yours to play")
+            return False
+        reallyMovablePieces = [x[0] for x in allPossibleMove(board, side)]
+        if pieceToMove not in reallyMovablePieces:
+            print("This piece can not be moved")
+            return False
+        possibleDest = possibleMove(pieceToMove,board)
+        if dest not in possibleDest:
+            print("can not move like that")
+            return False
+    # capture check
     for piece in board.piecePos:
         if piece == dest:
             board.piecePos[board.piecePos.index(piece)]= 44
@@ -252,7 +254,7 @@ def userMove(board,side):
         command = raw_input("next? "+', '.join(hint)+' ')
         (pieceToMove,dest)=moveInterpreter(command)
         if (pieceToMove,dest)!=(-1,-1) :
-            flag = move(pieceToMove, dest, board, side)
+            flag = move(pieceToMove, dest, board, side, True)
 
 def materialScore(board,side):
     matS = 0
@@ -382,13 +384,15 @@ def main():
         else:
             AI2Time+=end-start
         sideToPlay = (sideToPlay + 1) % 2
+        if roundCount>100:
+            return -1,0,0,0
         if loser!=-1:
             # printBoard(gameBoard)
             print("GAME OVER, player "+str((loser+1)%2)+" wins in "+str(roundCount)+" rounds")
             del gameBoard
             return (loser+1)%2, roundCount,AI1Time,AI2Time
 
-# main()
+main()
 def AiVSAI():
     result = []
     nb = 100
@@ -415,16 +419,96 @@ def AiVSAI():
     print("player 0 thinking time ", sum([x[2] for x in result]))
     print("player 1 thinking time ", sum([x[3] for x in result]))
 
-AiVSAI()
-print("ab3 mob VS ab3")
+# AiVSAI()
+# print("ab3 mob VS ab3")
+class BoardUI(Frame):
+    def __init__(self, parent):
+        Frame.__init__(self, parent)
+        self.parent = parent
+        self.initUI()
 
+    def initUI(self):
+        self.parent.title("Calculator")
+
+        Style().configure("TButton", padding=(0, 5, 0, 5),
+                          font='serif 10')
+
+        self.columnconfigure(0, pad=3)
+        self.columnconfigure(1, pad=3)
+        self.columnconfigure(2, pad=3)
+        self.columnconfigure(3, pad=3)
+
+        self.rowconfigure(0, pad=3)
+        self.rowconfigure(1, pad=3)
+        self.rowconfigure(2, pad=3)
+        self.rowconfigure(3, pad=3)
+        self.rowconfigure(4, pad=3)
+
+        entry = Entry(self)
+        entry.grid(row=0, columnspan=4, sticky=W + E)
+        cls = Button(self, text="Cls")
+        cls.grid(row=1, column=0)
+        bck = Button(self, text="Back")
+        bck.grid(row=1, column=1)
+        lbl = Button(self)
+        lbl.grid(row=1, column=2)
+        clo = Button(self, text="Close")
+        clo.grid(row=1, column=3)
+        sev = Button(self, text="7")
+        sev.grid(row=2, column=0)
+        eig = Button(self, text="8")
+        eig.grid(row=2, column=1)
+        nin = Button(self, text="9")
+        nin.grid(row=2, column=2)
+        div = Button(self, text="/")
+        div.grid(row=2, column=3)
+
+        fou = Button(self, text="4")
+        fou.grid(row=3, column=0)
+        fiv = Button(self, text="5")
+        fiv.grid(row=3, column=1)
+        six = Button(self, text="6")
+        six.grid(row=3, column=2)
+        mul = Button(self, text="*")
+        mul.grid(row=3, column=3)
+
+        one = Button(self, text="1")
+        one.grid(row=4, column=0)
+        two = Button(self, text="2")
+        two.grid(row=4, column=1)
+        thr = Button(self, text="3")
+        thr.grid(row=4, column=2)
+        mns = Button(self, text="-")
+        mns.grid(row=4, column=3)
+
+        zer = Button(self, text="0")
+        zer.grid(row=5, column=0)
+        dot = Button(self, text=".")
+        dot.grid(row=5, column=1)
+        equ = Button(self, text="=")
+        equ.grid(row=5, column=2)
+        pls = Button(self, text="+")
+        pls.grid(row=5, column=3)
+
+        self.pack()
+
+
+def main():
+    root = Tk()
+    app = Example(root)
+    root.mainloop()
+
+
+if __name__ == '__main__':
+    main()
 
 def clickAt(pos):
     pass
 def printBoardUI(board):
+    caseGroup =[]
     for i in range(6):
         for j in range(6):
-            Button(text=str(board.TerrainMap[i*6+j]), command=lambda: clickAt(i * 6 + j))
+            caseGroup.append(Button(text=str(board.terrainMap[i*6+j]), command=lambda: clickAt(i * 6 + j)))
 
 def mainWithUI():
     gameBoard = Board()
@@ -437,3 +521,4 @@ def mainWithUI():
     printBoardUI(gameBoard)
     fen1.mainloop()
 
+mainWithUI()
