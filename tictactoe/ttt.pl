@@ -1,5 +1,5 @@
-%:- include(minimax).
-%:- include(tictactoe).
+:- include(minimax).
+:- include(tictactoe).
 
 % bestMove(+Pos, -NextPos)
 % Compute the best Next Position from Position Pos

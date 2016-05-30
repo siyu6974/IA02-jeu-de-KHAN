@@ -83,7 +83,7 @@ def printBoard(gameBoard):
 
 def up(n):
     tmp = n-6
-    if tmp>0:
+    if tmp>=0:
         return tmp
     return 40
 def down(n):
@@ -365,11 +365,11 @@ def main():
     while True:
         print("side to play = ", sideToPlay)
         start = clock()
-        # printBoard(gameBoard)
+        printBoard(gameBoard)
         if sideToPlay==0:
-            AImove = generateMove(gameBoard, sideToPlay, 3, True,evaluate2)
-            move(AImove[0], AImove[1], gameBoard, sideToPlay)
-            # userMove(gameBoard, sideToPlay)
+            # AImove = generateMove(gameBoard, sideToPlay, 3, True,evaluate2)
+            # move(AImove[0], AImove[1], gameBoard, sideToPlay)
+            userMove(gameBoard, sideToPlay)
         else:
             AImove = generateMove(gameBoard, sideToPlay,3,True,evaluate)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
