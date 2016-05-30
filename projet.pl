@@ -34,10 +34,10 @@ initBoard :-
 	% read(tmpPosition).
 
 main:-afficherBoard.
-basicMove(Pos,-6) :- Pos-6>0.
-basicMove(Pos,6) :- Pos+6<37.
+basicMove(Pos,-6) :- Pos-6>=0.
+basicMove(Pos,6) :- Pos+6<36.
 basicMove(Pos,-1) :- ((Pos-1) // 6) =:= (Pos//6).
-basicMove(Pos,1) :- Pos-6>0.
+basicMove(Pos,1) :- ((Pos+1) // 6) =:= (Pos//6).
 
-% possMove(Board,Step,Pos,Result)
-possMove(Board,1,Pos,Result).
+% possMove(Step,Pos,Result)
+possMove(1,Pos,Result) :- setof(PossibleMove,basicMove(Pos,PossibleMove),Result).
