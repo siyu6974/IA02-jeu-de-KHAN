@@ -53,5 +53,19 @@ move(Pos,Move,Dest) :- Dest is Pos+Move.
 
 
 % possMove(Step,Pos,Result)
-possMove(1,Pos,Result) :- findalll(x,move1(Pos,x),m).
+possMove(1,Pos,Result) :- findalll(x,move1(Pos,M),M).
 possMove(2,Pos,Result).
+
+main:-choosemode.
+
+% Decide players.
+choosemode:-
+	write('Choose the mode of play:' ), nl,
+	write('1 Human VS Computer'),nl,
+	write('2 Human VS Human'),nl,
+	write('3 Computer VS Computer'),nl,
+	write('Use the fonction mode(Choice) to enter your choice please.').
+
+mode(1):-write('Human VS Computer, Good luck!'),nl,afficherBoard.
+mode(2):-write('Human VS Human, Good luck!'),nl,afficherBoard.
+mode(3):-write('Computer VS Computer'),nl,afficherBoard.
