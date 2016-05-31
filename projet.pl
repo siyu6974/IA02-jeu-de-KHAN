@@ -33,7 +33,7 @@ initBoard :-
     % printf("Enter the position of the %d pawn", N),
 	% read(tmpPosition).
 
-main:-afficherBoard.
+main:-choosemode.
 basicMove(Pos,-6) :- Pos-6>=0.
 basicMove(Pos,6) :- Pos+6<36.
 basicMove(Pos,-1) :- ((Pos-1) // 6) =:= (Pos//6).
@@ -41,3 +41,16 @@ basicMove(Pos,1) :- ((Pos+1) // 6) =:= (Pos//6).
 
 % possMove(Step,Pos,Result)
 possMove(1,Pos,Result) :- setof(PossibleMove,basicMove(Pos,PossibleMove),Result).
+
+% Decide players.
+choosemode:-
+	write('Choose the mode of play:' ), nl, 
+	write('1 Human VS Computer'),nl,
+	write('2 Human VS Human'),nl,
+	write('3 Computer VS Computer'),nl,
+	write('Use the fonction mode(Choice) to enter your choice please.').
+
+mode(1):-write('Human VS Computer, Good luck!'),nl,afficherBoard.
+mode(2):-write('Human VS Human, Good luck!'),nl,afficherBoard.
+mode(3):-write('Computer VS Computer'),nl,afficherBoard.
+
