@@ -34,10 +34,24 @@ initBoard :-
 	% read(tmpPosition).
 
 main:-afficherBoard.
-basicMove(Pos,-6) :- Pos-6>=0.
-basicMove(Pos,6) :- Pos+6<36.
-basicMove(Pos,-1) :- ((Pos-1) // 6) =:= (Pos//6).
-basicMove(Pos,1) :- ((Pos+1) // 6) =:= (Pos//6).
+move1(Pos,-6,Dest) :- Dest is Pos-6, Dest>=0.
+move1(Pos,6,Dest) :- Dest is Pos+6, Dest<36.
+move1(Pos,-1,Dest) :- Dest is Pos-1, (Dest // 6) =:= (Pos//6).
+move1(Pos,1,Dest) :- Dest is Pos+1, (Dest // 6) =:= (Pos//6).
+move2(Pos,-12,Dest):-move1(Pos,-6,T),move1(T,-6,Dest).
+move2(Pos,-7,Dest):-move1(Pos,-6,T),move1(T,-1,Dest).
+move2(Pos,-7,Dest):-move1(Pos,-1,T),move1(T,-6,Dest).
+move2(Pos,-2,Dest):-move1(Pos,-1,T),move1(T,-1,Dest).
+move2(Pos,-5,Dest):-move1(Pos,-6,T),move1(T,1,Dest).
+move2(Pos,-5,Dest):-move1(Pos,1,T),move1(T,-6,Dest).
+move2(Pos,5,Dest):-move1(Pos,6,T),move1(T,-1,Dest).
+move2(Pos,5,Dest):-move1(Pos,-1,T),move1(T,6,Dest).
+move2(Pos,7,Dest):-move1(Pos,6,T),move1(T,1,Dest).
+move2(Pos,7,Dest):-move1(Pos,1,T),move1(T,6,Dest).
+
+move(Pos,Move,Dest) :- Dest is Pos+Move.
+
 
 % possMove(Step,Pos,Result)
-possMove(1,Pos,Result) :- setof(PossibleMove,basicMove(Pos,PossibleMove),Result).
+possMove(1,Pos,Result) :- findalll(x,move1(Pos,x),m).
+possMove(2,Pos,Result).
