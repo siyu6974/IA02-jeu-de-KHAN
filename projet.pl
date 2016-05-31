@@ -35,7 +35,7 @@ initBoard :-
 
 main:-afficherBoard.
 
-move1(Pos,-6,Dest,BF) :- Dest is Pos-6, Dest>=0.
+move1(Pos,-6,Dest) :- Dest is Pos-6, Dest>=0.
 move1(Pos,6,Dest) :- Dest is Pos+6, Dest<36.
 move1(Pos,-1,Dest) :- Dest is Pos-1, (Dest // 6) =:= (Pos//6).
 move1(Pos,1,Dest) :- Dest is Pos+1, (Dest // 6) =:= (Pos//6).
@@ -52,13 +52,13 @@ move2(Pos,5,Dest):-move1(Pos,-1,T),\+(member(T,BF)),move1(T,6,Dest).
 move2(Pos,7,Dest):-move1(Pos,6,T),\+(member(T,BF)),move1(T,1,Dest).
 move2(Pos,7,Dest):-move1(Pos,1,T),\+(member(T,BF)),move1(T,6,Dest).
 
-move(Pos,Move,Dest) :- Dest is Pos+Move.
+capture(pos,):-
 test(T,R):-R is T+1.
 % possMove(1,Pos,Result) :- setof(PossibleMove,basicMove(Pos,PossibleMove),Result).
 % possMove(Step,Pos,Result)
 possMove(1,Pos,Result) :- setof(Dest,Dir^move1(Pos,Dir,Dest),Result).
-possMove(2,Pos,Result).
-
+possMove(2,Pos,Result) :- setof(Dest,Dir^move2(Pos,Dir,Dest,BF),Result).
+possMove(3,Pos,Result) :- setof(Dest,Dir^move3(Pos,Dir,Dest,BF),Result).
 main:-choosemode.
 
 % Decide players.
