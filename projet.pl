@@ -158,3 +158,52 @@ mode(1):-write('Human VS Computer, Good luck!'),nl,afficherBoard.
 mode(2):-write('Computer VS Human, Good luck!'),nl,afficherBoard.
 mode(3):-write('Human VS Human, Good luck!'),nl,afficherBoard.
 mode(4):-write('Computer VS Computer'),nl,afficherBoard.
+
+
+play :-
+    nl,
+    write('==================================='), nl,
+	write('============ Prolog KHAN =========='), nl,
+	write('==================================='), nl, nl,
+	write('@Right of Siyu ZHANG & Mengjia SUI'), nl,
+	playAskColor.
+
+%playAskColor
+% Ask the color for the human player and start the game with it.
+playAskColor :-
+	  nl, write('Side for human player ? ("x" for first and "o" for second)'), nl,
+	  read(Player), nl,
+	  (
+	    Player \= o, Player \= x, !,    % If not x or o -> not a valid color
+	    write('Error : This is not a valid side !'), nl,
+	    playAskColor                     % Ask again
+	    ;
+		terrainMap(TerrainMap),
+		asserta(board(TerrainMap,['','','','','','','', '', '', '', '', ''],?)),
+		nl, afficherBoard, nl,
+		write('Position for Queen, position from A0 to F5'), nl,
+	    read(Queen), nl, write('OK Queen'), nl,
+		write('Positions for siyu1, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu1'), nl,
+		write('Positions for siyu2, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu2'), nl,
+		write('Positions for siyu3, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu3'), nl,
+		write('Positions for siyu4, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu4'), nl,
+		write('Positions for siyu5, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu5'), nl,
+	    % Start the game with color and emptyBoard
+
+	    write('UserInitBoard Finish'), nkl,
+		asserta(board(TerrainMap,['A0','','','','','','', '', '', '', '', ''],?)),
+		nl, afficherBoard		
+		%play([x, play, EmptyBoard], Player)
+	  ).
+ % User Move
+ userMove:- nl, write('It\'s your turn !'), nl,
+			    write('Which one would you want to move ?'), nl,
+				read(Pos),nl,
+				write('Where would you like to put it ?'),nl,
+				read(Dest),nl,
+				move(Pos,Dest).
