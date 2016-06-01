@@ -3,6 +3,8 @@ longeur(Carre,Dim):-length(Carre,Dim).
 % Partie I
 % Q1
 dimension(Carre,Dim):-longeur(Carre,Dim).
+concat(A,B,C):-append(A,B,C).
+somme(L,X):-sum_list(L,X).
 % Q2
 % element_n(N,L,X).
 element_n(1,[T|_],T):-!.
@@ -33,18 +35,18 @@ diagonale_1(I,[L|Q],[X|D1Res]):-element_n(I,L,X),J is I+1, diagonale_1(J,Q,D1Res
 diagonale1(Carre,D1):-diagonale_1(1,Carre,D1).
 
 diagonale_2(1,[L],[X]):-element_n(1,L,X),!.
-diagonale_2(J,[J|Q],[X|D2Res]):-element_n(J,L,X),K is J-1,diagonale_2(K,Q,D2Res).
+diagonale_2(J,[L|Q],[X|D2Res]):-element_n(J,L,X),K is J-1,diagonale_2(K,Q,D2Res).
 diagole2(Carre,D2):-dimension(Carre,Dim),diagonale_2(Dim,Carre,D2).
 
 %
 composantes(Carre,Comp):-
 	colonnes(Carre,Cols),
-	diagonale(Carre,D1),
-	diagonale(Carre,D2),
+	diagonale1(Carre,D1),
+	diagonale2(Carre,D2),
 	concat(Cols,[D1,D2],CD),
 	concat(Carre,CD,Comp).
 
 %
 magique(Carre):-composantes(Carre,[T|Q]),somme(T,S),meme_somme(Q,S).
 meme_somme([],_).
-meme_somme([T|Q],S):-meme_somme(Q,S).
+meme_somme([T|Q],S):-somme(T,S),meme_somme(Q,S).
