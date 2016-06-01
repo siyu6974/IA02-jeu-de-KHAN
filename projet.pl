@@ -1,7 +1,6 @@
 % Projet IA02
 :- include('movementRules.pl').
 :- include('jeuDeKHAN_lib.pl').
-
 :- dynamic(board/3).
 
 terrainMap([2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]).
@@ -53,13 +52,13 @@ initBoard :-
 allPossibleMove(Side,Result):-
 	board(TerrainMap,BF,KHAN),
 	(
-		Side == 0,sublistOf(1,6,BF,SideP)
+		Side == 0,sublistOf(1,6,BF,Camarades)
 	;
-		sublistOf(7,12,BF,SideP)
+		sublistOf(7,12,BF,Camarades)
 	),!,
 	findall(
 		[Piece|PossibleMove],
-		(member(Piece,SideP),tryMove(Piece,TerrainMap,BF,KHAN,PossibleMove)),
+		(member(Piece,Camarades),tryMove(Piece,TerrainMap,BF,KHAN,PossibleMove)),
 		R1),
 	(
 		length(R1,Len),
@@ -71,7 +70,7 @@ allPossibleMove(Side,Result):-
 			Len==Len2			%eg: R1=[[17]], 17 could move but blocked
 		),!,
 		(
-			resurrectionTarget(BF,1,_),
+			resurrectionTarget(BF,Side,_),
 			resurrectionPosition(BF,TerrainMap,KHAN,GardenTomb),
 			R2 = [[44|GardenTomb]]
 		;
@@ -79,7 +78,7 @@ allPossibleMove(Side,Result):-
 		),!,
 		findall(
 			[Piece|PossibleMove],
-			(member(Piece,SideP),tryMove(Piece,TerrainMap,BF,0,PossibleMove)),
+			(member(Piece,Camarades),tryMove(Piece,TerrainMap,BF,0,PossibleMove)),
 			R1n),
 		append(R1n,R2,Result)
 	;

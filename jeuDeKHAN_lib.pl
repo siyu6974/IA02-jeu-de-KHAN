@@ -18,9 +18,9 @@ modifyList(Target,NewValue,List,NewList):-
 modifyList2(_,_,_,[],12).
 modifyList2(Index,Dest,[E|Q1],[R|Q2],Count):-
 	(
-	Index==Count, R is Dest
+	   Index==Count, R is Dest
     ;
-	R is E
+	   R is E
 	),
 	Next is Count + 1,
 	modifyList2(Index,Dest,Q1,Q2,Next),!.
