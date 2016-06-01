@@ -25,9 +25,9 @@ modifyList2(Index,Dest,[E|Q1],[R|Q2],Count):-
 	Next is Count + 1,
 	modifyList2(Index,Dest,Q1,Q2,Next),!.
 
-% length of a 2 dimensional list, lenTotal(List,0,Len)
-lenTotal([],Count,Count).
-lenTotal([ElementList|T],Start,Count):-
+% length of a 2 dimensional list, lenTotal(List,Len)
+lenTotal([],0).
+lenTotal([ElementList|T],Count):-
     length(ElementList,Len),
-    Tmp is Start + Len,
-    lenTotal(T,Tmp,Count).
+    lenTotal(T,Tmp),
+    Count is Tmp+Len.

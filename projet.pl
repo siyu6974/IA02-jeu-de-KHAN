@@ -67,7 +67,7 @@ allPossibleMove(Side,Result):-
 		(
 			Len==0%KHAN sucks because of terrain
 		;
-			lenTotal(R1,0,Len2),%KHAN sucks because of terrain+blocage
+			lenTotal(R1,Len2),%KHAN sucks because of terrain+blocage
 			Len==Len2			%eg: R1=[[17]], 17 could move but blocked
 		),!,
 		(
