@@ -1,6 +1,10 @@
-sublistOf(Start,End,List,Sublist) :-
-    sublist(Sublist,List),L is End-Start+1, length(Sublist,L),
-	nth(1,Sublist,Tmp),nth(Start,List,Tmp),nth(L,Sublist,Tmp2),nth(End,List,Tmp2).
+%slice(Start,End,List,Sublist)
+slice(1,1,[H|_],[H]).
+slice(1,End,[H|T1],[H|T2]) :-
+    End > 1, EndT is End - 1, slice(1,EndT,T1,T2).
+slice(Start,End,[_|T],Sublist) :-
+    Start > 1, StartT is Start - 1,
+    EndT is End - 1, slice(StartT,EndT,T,Sublist).
 
 indexOf([Element|_], Element, 0).
 indexOf([_|Tail], Element, Index):-

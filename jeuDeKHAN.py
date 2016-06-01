@@ -260,7 +260,7 @@ def materialScore(board,side):
     matS = 0
     for piece in board.piecePos[side*6:(side+1)*6-1]:
         if piece != 44:
-            matS += 4
+            matS += 5
     if board.piecePos[(side+1)*6-1] != 44: # Queen alive
         matS += 1000
     return matS

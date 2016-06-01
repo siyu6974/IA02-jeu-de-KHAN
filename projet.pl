@@ -17,9 +17,9 @@ printBattleField(Line,6,BF) :-
 printBattleField(Line,Row,BF) :-
 	Scanning is Line*6+Row,
 	(
-		sublistOf(1,5,BF,Side0),member(Scanning,Side0), write('o ')
+		slice(1,5,BF,Side0),member(Scanning,Side0), write('o ')
 	;
-		sublistOf(7,11,BF,Side1),member(Scanning,Side1), write('x ')
+		slice(7,11,BF,Side1),member(Scanning,Side1), write('x ')
 	;
 		nth(6,BF,Q1),Q1==Scanning, write('O ')
 	;
@@ -39,22 +39,22 @@ printDeadPiece(BF):- findall(Index,
 	_).
 
 afficherBoard:-
-	board(TerrainMap,_,KHAN),write(' '),printMatrix(TerrainMap,6),
-	nl,board(_,BF,_), printBattleField(-1,0,BF),nl,write('   '),
+	board(TerrainMap,BF,KHAN),write(' '),printMatrix(TerrainMap,6),
+	nl, printBattleField(-1,0,BF),nl,write('   '),
 	printDeadPiece(BF),!,nl,write('KHAN = '),write(KHAN).
 
 
 initBoard :-
 	terrainMap(TerrainMap),
-    asserta(board(TerrainMap,[44, 44, 18, 20, 1, 25, 16, 44, 17, 10, 5, 23],1)).
+    asserta(board(TerrainMap,[0, 1, 3, 44, 44, 4, 16, 44, 17, 10, 5, 44],1)).
 
 % allPossibleMove(Side,Result)
 allPossibleMove(Side,Result):-
 	board(TerrainMap,BF,KHAN),
 	(
-		Side == 0,sublistOf(1,6,BF,Camarades)
+		Side == 0,slice(1,6,BF,Camarades)
 	;
-		sublistOf(7,12,BF,Camarades)
+		slice(7,12,BF,Camarades)
 	),!,
 	findall(
 		[Piece|PossibleMove],
@@ -96,10 +96,10 @@ tryMove(Pos,TerrainMap,BF,KHAN,Result):-
 	possMove(Step,Pos,Tmp),indexOf(BF,Pos,N),
 	(
 		N=<5,%side 0
-		sublistOf(1,6,BF,Side0),subtract(Tmp,Side0,Result)
+		slice(1,6,BF,Side0),subtract(Tmp,Side0,Result)
 	;
 		N>5,%side 1
-		sublistOf(7,12,BF,Side1),subtract(Tmp,Side1,Result)
+		slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
 	),!.
 
 % move gives the consiquence of a move
@@ -107,11 +107,11 @@ move(Pos,Dest) :-
 	board(TerrainMap,BF,_), indexOf(BF,Pos,N),
 	(
 		N=<5,%side 0 moving
-		sublistOf(7,12,BF,Side1),member(Dest,Side1),
+		slice(7,12,BF,Side1),member(Dest,Side1),
 		modifyList(Dest,44,BF,NewBF), modifyList(Pos,Dest,NewBF,FinBF)%capture
 	;
 		N>5,%side 1 moving
-		sublistOf(1,6,BF,Side0),member(Dest,Side0),
+		slice(1,6,BF,Side0),member(Dest,Side0),
 		modifyList(Dest,44,BF,NewBF), modifyList(Pos,Dest,NewBF,FinBF)%capture
 	;
 		modifyList(Pos,Dest,BF,FinBF)%peace
@@ -122,9 +122,9 @@ move(Pos,Dest) :-
 
 % resurrectionTarget(BF,Side,TargetIndex)
 resurrectionTarget(BF,0,TargetIndex):-
-	sublistOf(1,5,BF,Side0), indexOf(Side0,44,TargetIndex).
+	slice(1,5,BF,Side0), indexOf(Side0,44,TargetIndex).
 resurrectionTarget(BF,1,TargetIndex):-
-	sublistOf(7,11,BF,Side1),indexOf(Side1,44,TargetIndex).
+	slice(7,11,BF,Side1),indexOf(Side1,44,TargetIndex).
 
 resurrectionPosition(BF,TerrainMap,KHAN,GardenTomb):-
 	setof(
@@ -143,6 +143,45 @@ resurrect(Side,Dest):-
 	modifyList2(TargetIndex,Dest,BF,FinBF,0),
 	retract(board(_,BF,_)),%delete old board,
 	asserta(board(TerrainMap,FinBF,KHAN)),!.
+
+% minimax(Side,0,_,Max,Val,_).
+% minimax(Side,Depth,Node,Max,Val,BestMove):-
+
+
+% evaluate(Side,BF,Val,0)
+evaluate(Side,BF,Val,Flag):-
+	(
+		Side == 0,slice(1,6,BF,Camarades)
+	;
+		slice(7,12,BF,Camarades)
+	),!,
+	nth(6,Camarades,Q),
+	(
+		Q < 44,
+		Vq is 995 %Queen worth actually 1000, of which 5 from countPawns
+	;
+		Vq is 0
+	),!,
+	countPawns(Camarades,Vpawns),
+	VSelf is Vq+Vpawns,
+	Opponent is (Side+1) mod 2,
+	(
+		Flag == 1,
+		Val is VSelf
+	;
+		evaluate(Opponent,BF,ValOp,1),
+		Val is VSelf - ValOp
+	),!.
+
+countPawns([],0).
+countPawns([Camarade|Rest],Return):-
+	countPawns(Rest,V),
+	(
+		Camarade < 44,
+		Return is V+5
+	;
+	Return is V
+	),!.
 
 main:-initBoard,choosemode.
 % UI.
