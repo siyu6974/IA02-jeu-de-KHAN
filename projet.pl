@@ -199,3 +199,53 @@ mode(1):-write('Human VS Computer, Good luck!'),nl,afficherBoard.
 mode(2):-write('Computer VS Human, Good luck!'),nl,afficherBoard.
 mode(3):-write('Human VS Human, Good luck!'),nl,afficherBoard.
 mode(4):-write('Computer VS Computer'),nl,afficherBoard.
+
+
+play :-
+    nl,
+    write('==================================='), nl,
+	write('============ Prolog KHAN =========='), nl,
+	write('==================================='), nl, nl,
+	write('@Right of Siyu ZHANG & Mengjia SUI'), nl,
+	playAskColor.
+
+%playAskColor
+% Ask the color for the human player and start the game with it.
+playAskColor :-
+	  nl, write('Side for human player ? ("x" for first and "o" for second)'), nl,
+	  read(Player), nl,
+	  (
+	    Player \= o, Player \= x, !,    % If not x or o -> not a valid color
+	    write('Error : This is not a valid side !'), nl,
+	    playAskColor                     % Ask again
+	    ;
+		terrainMap(TerrainMap),
+		asserta(board(TerrainMap,['','','','','','','', '', '', '', '', ''],?)),
+		nl, afficherBoard, nl,
+		write('Position for Reine, position from A0 to F5'), nl,
+	    read(Reine), nl, write('OK Reine'), nl, appel(Reine),
+		write('Positions for Sbire_1, position from A0 to F5'), nl,
+		read(S1), nl, write('OK Sbire_1'), nl, appel(S1),
+		write('Positions for Sbire_1, position from A0 to F5'), nl,
+		read(P2), nl, write('OK Sbire_2'), nl, appel(S2),
+		write('Positions for Sbire_3, position from A0 to F5'), nl,
+		read(P3), nl, write('OK Sbire_3'), nl, appel(S3),
+		write('Positions for Sbire_4, position from A0 to F5'), nl,
+		read(P4), nl, write('OK Sbire_4'), nl, appel(S4),
+		write('Positions for Sbire_4, position from A0 to F5'), nl,
+		read(P5), nl, write('OK Sbire_5'), nl, appel(S5),
+	    % Start the game with color and emptyBoard
+		
+	    write('UserInitBoard Finish'), nkl,
+		asserta(board(TerrainMap,['A0','','','','','','', '', '', '', '', ''],?)),
+		nl, afficherBoard		
+		%play([x, play, EmptyBoard], Player)
+	  ).
+
+ % User Move
+ userMove:- nl, write('It\'s your turn !'), nl,
+			    write('Which one would you want to move ?'), nl,
+				read(Pos),nl,
+				write('Where would you like to put it ?'),nl,
+				read(Dest),nl,
+				move(Pos,Dest).
