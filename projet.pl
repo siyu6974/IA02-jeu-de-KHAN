@@ -239,7 +239,7 @@ playAskColor :-
 		nl, afficherBoard, nl,
 
 		write('Position for Queen, position from a0,a1 to f4,f5'), nl,
-	    read(Reine), nl, write('OK Reine'), nl, translate(Reine,R),
+	    read(Reine), nl, write('OK Queen'), nl, translate(Reine,R),
 		write('Positions for Pawn_1, position from a0 to f5'), nl,
 		read(S1), nl, write('OK Pawn_1'), nl, translate(S1,R1),
 		write('Positions for Pawn_1, position from a0 to f5'), nl,
@@ -253,9 +253,11 @@ playAskColor :-
 	    write('UserInitBoard Finish'), nl,
 		% valeurKhan(R,[2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1],K),
 		(Player = o,
+			retract(board(_,_,_)),%delete old empty board,
 			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,44, 44, 44, 44, 44, 44],0)), nl, afficherBoard
 		 ;
 		 Player = x,
+		 	retract(board(_,_,_)),%delete old empty board,
 			asserta(board(TerrainMap,[44, 44, 44, 44, 44, 44,R1,R2,R3,R4,R5,R],0)), nl, afficherBoard
 		)
 		%play([x, play, EmptyBoard], Player)
