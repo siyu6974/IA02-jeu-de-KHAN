@@ -49,7 +49,7 @@ initBoard :-
     asserta(board(TerrainMap,[0, 1, 3, 44, 44, 4, 16, 44, 17, 10, 5, 44],1)).
 
 % allPossibleMove(Side,Result)
-allPossibleMove(Side,Result):-
+allPossibleMove(Side,AllPossibleMoves):-
 	board(TerrainMap,BF,KHAN),
 	(
 		Side == 0,slice(1,6,BF,Camarades)
@@ -84,7 +84,7 @@ allPossibleMove(Side,Result):-
 	;
 		%loyal suject of KHAN
 		Result = R1
-	),!.
+	),distributer(Result,AllPossibleMoves),!.
 % tryMove prevents friendly fire
 tryMove(Pos,TerrainMap,BF,KHAN,Result):-
 	Pos<36, nth0(Pos,TerrainMap,Step),%obeying terrainMap
@@ -144,11 +144,25 @@ resurrect(Side,Dest):-
 	retract(board(_,BF,_)),%delete old board,
 	asserta(board(TerrainMap,FinBF,KHAN)),!.
 
-minimax(_,Side,0,Max,Val,_):-
+minimax(Side,0,Max,Val,_):-
+
 	board(_,BF,_),
 	SideAbs is (Side+Max+1) mod 2,
 	evaluate(SideAbs,BF,Val,0).
-minimax(Node,Side,Depth,Max,Val,BestMove):-
+% board(T,BF,K), Board = [T,BF,K],nth(1,Board,TerrainMap),nth(2,Board,BF),nth(3,Board,KHAN),
+% minimax(Side,3,1,Val,BestMove)
+minimax(Side,Depth,Max,Val,BestMove):-
+	allPossibleMove(Side,PossibleMoves),
+	member(APossibleMove,PossibleMoves),
+	board(TerrainMap,BF,KHAN),
+	asserta(board(TerrainMap,BF,KHAN)),%Clone
+	nth(1,APossibleMove,From),nth(2,APossibleMove,To),
+	move(From,To),
+	Min is (Max+1) mod 2,
+	Deeper is Depth -1,
+	Op is (Side+1) mod 2,
+	minimax(Op,Deeper,Min,Val,BestMove).
+
 
 % evaluate(Side,BF,Val,0)
 evaluate(Side,BF,Val,Flag):-
@@ -204,7 +218,7 @@ mode(4):-write('Computer VS Computer'),nl,afficherBoard.
 play :-
     nl,
     write('==================================='), nl,
-	write('============ Prolog KHAN =========='), nl,
+	write('======== Prolog Jeu de KHAN ======='), nl,
 	write('==================================='), nl, nl,
 	write('@Right of Siyu ZHANG & Mengjia SUI'), nl,
 	playAskColor.
@@ -222,26 +236,26 @@ playAskColor :-
 		terrainMap(TerrainMap),
 		asserta(board(TerrainMap,['','','','','','','', '', '', '', '', ''],?)),
 		nl, afficherBoard, nl,
-		write('Position for Reine, position from A0 to F5'), nl,
-	    read(Reine), nl, write('OK Reine'), nl, appel(Reine),
-		write('Positions for Sbire_1, position from A0 to F5'), nl,
-		read(S1), nl, write('OK Sbire_1'), nl, appel(S1),
-		write('Positions for Sbire_1, position from A0 to F5'), nl,
-		read(P2), nl, write('OK Sbire_2'), nl, appel(S2),
-		write('Positions for Sbire_3, position from A0 to F5'), nl,
-		read(P3), nl, write('OK Sbire_3'), nl, appel(S3),
-		write('Positions for Sbire_4, position from A0 to F5'), nl,
-		read(P4), nl, write('OK Sbire_4'), nl, appel(S4),
-		write('Positions for Sbire_4, position from A0 to F5'), nl,
-		read(P5), nl, write('OK Sbire_5'), nl, appel(S5),
+		write('Position for Queen, position from A0 to F5'), nl,
+	    read(Queen), nl, write('OK Queen'), nl,
+		write('Positions for siyu1, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu1'), nl,
+		write('Positions for siyu2, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu2'), nl,
+		write('Positions for siyu3, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu3'), nl,
+		write('Positions for siyu4, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu4'), nl,
+		write('Positions for siyu5, position from A0 to F5'), nl,
+		read(Player), nl, write('OK siyu5'), nl,
 	    % Start the game with color and emptyBoard
-		
+
 	    write('UserInitBoard Finish'), nkl,
 		asserta(board(TerrainMap,['A0','','','','','','', '', '', '', '', ''],?)),
-		nl, afficherBoard		
+		nl, afficherBoard
 		%play([x, play, EmptyBoard], Player)
 	  ).
-
+translate(a0,0).
  % User Move
  userMove:- nl, write('It\'s your turn !'), nl,
 			    write('Which one would you want to move ?'), nl,
