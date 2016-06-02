@@ -181,25 +181,26 @@ playAskColor :-
 		terrainMap(TerrainMap),
 		asserta(board(TerrainMap,['','','','','','','', '', '', '', '', ''],?)),
 		nl, afficherBoard, nl,
-		write('Position for Queen, position from A0 to F5'), nl,
-	    read(Queen), nl, write('OK Queen'), nl,
-		write('Positions for siyu1, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu1'), nl,
-		write('Positions for siyu2, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu2'), nl,
-		write('Positions for siyu3, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu3'), nl,
-		write('Positions for siyu4, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu4'), nl,
-		write('Positions for siyu5, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu5'), nl,
+		write('Position for Reine, position from A0 to F5'), nl,
+	    read(Reine), nl, write('OK Reine'), nl, appel(Reine),
+		write('Positions for Sbire_1, position from A0 to F5'), nl,
+		read(S1), nl, write('OK Sbire_1'), nl, appel(S1),
+		write('Positions for Sbire_1, position from A0 to F5'), nl,
+		read(P2), nl, write('OK Sbire_2'), nl, appel(S2),
+		write('Positions for Sbire_3, position from A0 to F5'), nl,
+		read(P3), nl, write('OK Sbire_3'), nl, appel(S3),
+		write('Positions for Sbire_4, position from A0 to F5'), nl,
+		read(P4), nl, write('OK Sbire_4'), nl, appel(S4),
+		write('Positions for Sbire_4, position from A0 to F5'), nl,
+		read(P5), nl, write('OK Sbire_5'), nl, appel(S5),
 	    % Start the game with color and emptyBoard
-
+		
 	    write('UserInitBoard Finish'), nkl,
 		asserta(board(TerrainMap,['A0','','','','','','', '', '', '', '', ''],?)),
 		nl, afficherBoard		
 		%play([x, play, EmptyBoard], Player)
 	  ).
+
  % User Move
  userMove:- nl, write('It\'s your turn !'), nl,
 			    write('Which one would you want to move ?'), nl,
