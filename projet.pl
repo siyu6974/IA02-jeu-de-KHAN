@@ -194,8 +194,8 @@ playAskColor :-
 		read(S4), nl, write('OK Sbire_4'), nl, translate(S4,R4),
 		write('Positions for Sbire_4, position from a0 to f5'), nl,
 		read(S5), nl, write('OK Sbire_5'), nl, translate(S5,R5),
-		
 	    write('UserInitBoard Finish'), nl,
+		% valeurKhan(R,[2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1],K),
 		(Player = o,
 			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,'', '', '', '', '', ''],?)), nl, afficherBoard
 		 ;
@@ -211,7 +211,12 @@ playAskColor :-
 				read(Pos),nl, translate(Pos, Position),
 				write('Where would you like to put it ?'),nl,
 				read(Dest),nl, translate(Dest, Destination),
-				% not(move(Position,Destination)),
-				% userMove
-				%;
+				\+ move(Position,Destination),
+				write('Move invalid!'), nl,
+				userMove
+				;
 				move(Position,Destination).
+
+% Decide first KHAN
+valeurKhan(1,[T|_],T):- !.
+valeurKhan(R,[_|Q],Res):- R2 is R-1, valeurKhan(R2,Q,Res).
