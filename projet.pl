@@ -145,7 +145,6 @@ resurrect(Side,Dest):-
 	asserta(board(TerrainMap,FinBF,KHAN)),!.
 
 minimax(Side,0,Max,Val,_):-
-
 	board(_,BF,_),
 	SideAbs is (Side+Max+1) mod 2,
 	evaluate(SideAbs,BF,Val,0).
@@ -158,7 +157,16 @@ minimax(Side,Depth,Max,Val,BestMove):-
 	asserta(board(TerrainMap,BF,KHAN)),%Clone
 	nth(1,APossibleMove,From),nth(2,APossibleMove,To),
 	move(From,To),
-	Max is
+	Min is (Max+1) mod 2,
+	Deeper is Depth -1,
+	Op is (Side+1) mod 2,
+	minimax(Op,Deeper,Min,RetrievedVal,APossibleMove),
+	(
+		Max == 1,
+		max(Val,RetrievedVal,Val)
+	;
+		min(Val,RetrievedVal,Val)
+	)
 
 
 % evaluate(Side,BF,Val,0)

@@ -1,6 +1,11 @@
 % oppositeNb(1,Y).
-oppositeNb(X,Y):-
-    Y is -X.
+oppositeNb(X,Y):- Y is -X.
+
+max(A,B,A):-A>=B.
+max(A,B,B):-B>A.
+
+min(A,B,A):-A=<B.
+min(A,B,B):-B<A.
 
 %slice(Start,End,List,Sublist)
 slice(1,1,[H|_],[H]).
