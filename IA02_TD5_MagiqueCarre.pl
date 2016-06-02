@@ -50,3 +50,13 @@ composantes(Carre,Comp):-
 magique(Carre):-composantes(Carre,[T|Q]),somme(T,S),meme_somme(Q,S).
 meme_somme([],_).
 meme_somme([T|Q],S):-somme(T,S),meme_somme(Q,S).
+
+% Partie 2
+genere_liste(1,[1]).
+genere_liste(UB,[UB,L]):-NB is UB-1, genere_liste(NB,L).
+
+retire_el([T|Q],T,Q).
+retire_el([T|Q],X,[T|LRes]):-retire_el(Q,X,LRes).
+
+genere_ligne(0,listeNbs,[],ListeNbs):-!.
+genere_ligne(N,ListeNbs,[X|Reste],ListeNbsR):-retire_el(ListeNbs,X,RTemp),M is N-1, genere_ligne(M,RTemp,Reste,ListeNbsR).

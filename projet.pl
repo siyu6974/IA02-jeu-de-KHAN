@@ -1,6 +1,7 @@
 % Projet IA02
 :- include('movementRules.pl').
 :- include('jeuDeKHAN_lib.pl').
+:- include('translatedic.pl').
 :- dynamic(board/3).
 
 terrainMap([2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]).
@@ -226,7 +227,7 @@ play :-
 %playAskColor
 % Ask the color for the human player and start the game with it.
 playAskColor :-
-	  nl, write('Side for human player ? ("x" for first and "o" for second)'), nl,
+	  nl, write('Side for human player ? ("o" for first and "x" for second)'), nl,
 	  read(Player), nl,
 	  (
 	    Player \= o, Player \= x, !,    % If not x or o -> not a valid color
@@ -234,32 +235,43 @@ playAskColor :-
 	    playAskColor                     % Ask again
 	    ;
 		terrainMap(TerrainMap),
-		asserta(board(TerrainMap,['','','','','','','', '', '', '', '', ''],?)),
+		asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
 		nl, afficherBoard, nl,
-		write('Position for Queen, position from A0 to F5'), nl,
-	    read(Queen), nl, write('OK Queen'), nl,
-		write('Positions for siyu1, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu1'), nl,
-		write('Positions for siyu2, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu2'), nl,
-		write('Positions for siyu3, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu3'), nl,
-		write('Positions for siyu4, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu4'), nl,
-		write('Positions for siyu5, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu5'), nl,
-	    % Start the game with color and emptyBoard
 
-	    write('UserInitBoard Finish'), nkl,
-		asserta(board(TerrainMap,['A0','','','','','','', '', '', '', '', ''],?)),
-		nl, afficherBoard
+		write('Position for Queen, position from a0,a1 to f4,f5'), nl,
+	    read(Reine), nl, write('OK Reine'), nl, translate(Reine,R),
+		write('Positions for Pawn_1, position from a0 to f5'), nl,
+		read(S1), nl, write('OK Pawn_1'), nl, translate(S1,R1),
+		write('Positions for Pawn_1, position from a0 to f5'), nl,
+		read(S2), nl, write('OK Pawn_2'), nl, translate(S2,R2),
+		write('Positions for Pawn_3, position from a0 to f5'), nl,
+		read(S3), nl, write('OK Pawn_3'), nl, translate(S3,R3),
+		write('Positions for Pawn_4, position from a0 to f5'), nl,
+		read(S4), nl, write('OK Pawn_4'), nl, translate(S4,R4),
+		write('Positions for Pawn_4, position from a0 to f5'), nl,
+		read(S5), nl, write('OK Pawn_5'), nl, translate(S5,R5),
+	    write('UserInitBoard Finish'), nl,
+		% valeurKhan(R,[2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1],K),
+		(Player = o,
+			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,44, 44, 44, 44, 44, 44],0)), nl, afficherBoard
+		 ;
+		 Player = x,
+			asserta(board(TerrainMap,[44, 44, 44, 44, 44, 44,R1,R2,R3,R4,R5,R],0)), nl, afficherBoard
+		)
 		%play([x, play, EmptyBoard], Player)
 	  ).
-translate(a0,0).
  % User Move
  userMove:- nl, write('It\'s your turn !'), nl,
 			    write('Which one would you want to move ?'), nl,
-				read(Pos),nl,
+				read(Pos),nl, translate(Pos, Position),
 				write('Where would you like to put it ?'),nl,
-				read(Dest),nl,
-				move(Pos,Dest).
+				read(Dest),nl, translate(Dest, Destination),
+				\+ move(Position,Destination),
+				write('Move invalid!'), nl,
+				userMove
+				;
+				move(Position,Destination).
+
+% Decide first KHAN
+valeurKhan(1,[T|_],T):- !.
+valeurKhan(R,[_|Q],Res):- R2 is R-1, valeurKhan(R2,Q,Res).
