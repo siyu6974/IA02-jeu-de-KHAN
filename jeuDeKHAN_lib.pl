@@ -1,3 +1,7 @@
+% oppositeNb(1,Y).
+oppositeNb(X,Y):-
+    Y is -X.
+
 %slice(Start,End,List,Sublist)
 slice(1,1,[H|_],[H]).
 slice(1,End,[H|T1],[H|T2]) :-
@@ -35,3 +39,15 @@ lenTotal([ElementList|T],Count):-
     length(ElementList,Len),
     lenTotal(T,Tmp),
     Count is Tmp+Len.
+
+% distributer(2dList,Return) [[P,1,2,3],[Q,1,2,3]]->[[P,1],[P,2]...[Q,3]]
+distributer([],[]).
+distributer([[H|R]|Tail],Return):-
+    subdistributer(H,R,L1),
+    append(L1,NextGroup,Return),
+    distributer(Tail,NextGroup).
+
+% subdistributer(P,1dList,Return) [P,1,2,3]->[[P,1],[P,2],[P,3]]
+subdistributer(_,[],[]):-!.
+subdistributer(H,[S|RList],[[H,S]|NextPair]):-
+    subdistributer(H,RList,NextPair).
