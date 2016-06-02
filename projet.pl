@@ -144,9 +144,11 @@ resurrect(Side,Dest):-
 	retract(board(_,BF,_)),%delete old board,
 	asserta(board(TerrainMap,FinBF,KHAN)),!.
 
-% minimax(Side,0,_,Max,Val,_).
-% minimax(Side,Depth,Node,Max,Val,BestMove):-
-
+minimax(_,Side,0,Max,Val,_):-
+	board(_,BF,_),
+	SideAbs is (Side+Max+1) mod 2,
+	evaluate(SideAbs,BF,Val,0).
+minimax(Node,Side,Depth,Max,Val,BestMove):-
 
 % evaluate(Side,BF,Val,0)
 evaluate(Side,BF,Val,Flag):-
@@ -158,7 +160,7 @@ evaluate(Side,BF,Val,Flag):-
 	nth(6,Camarades,Q),
 	(
 		Q < 44,
-		Vq is 995 %Queen worth actually 1000, of which 5 from countPawns
+		Vq is 995 %Queen is worth actually 1000, of which 5 from countPawns
 	;
 		Vq is 0
 	),!,
