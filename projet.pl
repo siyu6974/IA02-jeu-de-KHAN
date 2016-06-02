@@ -1,6 +1,7 @@
 % Projet IA02
 :- include('movementRules.pl').
 :- include('jeuDeKHAN_lib.pl').
+:- include('translatedic.pl').
 :- dynamic(board/3).
 
 terrainMap([2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]).
@@ -171,7 +172,7 @@ play :-
 %playAskColor
 % Ask the color for the human player and start the game with it.
 playAskColor :-
-	  nl, write('Side for human player ? ("x" for first and "o" for second)'), nl,
+	  nl, write('Side for human player ? ("o" for first and "x" for second)'), nl,
 	  read(Player), nl,
 	  (
 	    Player \= o, Player \= x, !,    % If not x or o -> not a valid color
@@ -181,30 +182,36 @@ playAskColor :-
 		terrainMap(TerrainMap),
 		asserta(board(TerrainMap,['','','','','','','', '', '', '', '', ''],?)),
 		nl, afficherBoard, nl,
-		write('Position for Reine, position from A0 to F5'), nl,
-	    read(Reine), nl, write('OK Reine'), nl, appel(Reine),
-		write('Positions for Sbire_1, position from A0 to F5'), nl,
-		read(S1), nl, write('OK Sbire_1'), nl, appel(S1),
-		write('Positions for Sbire_1, position from A0 to F5'), nl,
-		read(P2), nl, write('OK Sbire_2'), nl, appel(S2),
-		write('Positions for Sbire_3, position from A0 to F5'), nl,
-		read(P3), nl, write('OK Sbire_3'), nl, appel(S3),
-		write('Positions for Sbire_4, position from A0 to F5'), nl,
-		read(P4), nl, write('OK Sbire_4'), nl, appel(S4),
-		write('Positions for Sbire_4, position from A0 to F5'), nl,
-		read(P5), nl, write('OK Sbire_5'), nl, appel(S5),
-	    % Start the game with color and emptyBoard
+		write('Position for Reine, position from a0,a1 to f4,f5'), nl,
+	    read(Reine), nl, write('OK Reine'), nl, translate(Reine,R),
+		write('Positions for Sbire_1, position from a0 to f5'), nl,
+		read(S1), nl, write('OK Sbire_1'), nl, translate(S1,R1),
+		write('Positions for Sbire_1, position from a0 to f5'), nl,
+		read(S2), nl, write('OK Sbire_2'), nl, translate(S2,R2),
+		write('Positions for Sbire_3, position from a0 to f5'), nl,
+		read(S3), nl, write('OK Sbire_3'), nl, translate(S3,R3),
+		write('Positions for Sbire_4, position from a0 to f5'), nl,
+		read(S4), nl, write('OK Sbire_4'), nl, translate(S4,R4),
+		write('Positions for Sbire_4, position from a0 to f5'), nl,
+		read(S5), nl, write('OK Sbire_5'), nl, translate(S5,R5),
 		
-	    write('UserInitBoard Finish'), nkl,
-		asserta(board(TerrainMap,['A0','','','','','','', '', '', '', '', ''],?)),
-		nl, afficherBoard		
+	    write('UserInitBoard Finish'), nl,
+		(Player = o,
+			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,'', '', '', '', '', ''],?)), nl, afficherBoard
+		 ;
+		 Player = x,
+			asserta(board(TerrainMap,['', '', '', '', '', '',R1,R2,R3,R4,R5,R],?)), nl, afficherBoard
+		)
 		%play([x, play, EmptyBoard], Player)
 	  ).
 
  % User Move
  userMove:- nl, write('It\'s your turn !'), nl,
 			    write('Which one would you want to move ?'), nl,
-				read(Pos),nl,
+				read(Pos),nl, translate(Pos, Position),
 				write('Where would you like to put it ?'),nl,
-				read(Dest),nl,
-				move(Pos,Dest).
+				read(Dest),nl, translate(Dest, Destination),
+				% not(move(Position,Destination)),
+				% userMove
+				%;
+				move(Position,Destination).
