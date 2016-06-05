@@ -89,20 +89,26 @@ allPossibleMove(Side,AllPossibleMoves):-
 	),distributer(Result,AllPossibleMoves),!.
 % tryMove prevents friendly fire
 tryMove(Pos,TerrainMap,BF,KHAN,Result):-
-	Pos<36, nth0(Pos,TerrainMap,Step),%obeying terrainMap
 	(
-		KHAN == Step
+		Pos<36, nth0(Pos,TerrainMap,Step),%obeying terrainMap
+		(
+			KHAN == Step
+		;
+			KHAN == 0
+		;
+			write('Obey the KHAN!'),nl,fail
+		),
+		possMove(Step,Pos,Tmp),indexOf(BF,Pos,N),
+		(
+			N=<5,%side 0
+			slice(1,6,BF,Side0),subtract(Tmp,Side0,Result)
+		;
+			N>5,%side 1
+			slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
+		),!
 	;
-		KHAN == 0
-	),
-	possMove(Step,Pos,Tmp),indexOf(BF,Pos,N),
-	(
-		N=<5,%side 0
-		slice(1,6,BF,Side0),subtract(Tmp,Side0,Result)
-	;
-		N>5,%side 1
-		slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
-	),!.
+		Pos==44
+	).
 
 % move gives the consiquence of a move
 move(Pos,Dest) :-
