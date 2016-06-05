@@ -371,7 +371,8 @@ def main():
             # move(AImove[0], AImove[1], gameBoard, sideToPlay)
             userMove(gameBoard, sideToPlay)
         else:
-            AImove = generateMove(gameBoard, sideToPlay,3,True,evaluate)
+
+            AImove = generateMove(gameBoard, sideToPlay,8,True,evaluate)
             move(AImove[0], AImove[1], gameBoard, sideToPlay)
             # print(AImove)
 

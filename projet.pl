@@ -171,11 +171,11 @@ minimax(Side,Depth,Max,BestVal,BestMove):-
 			Deeper is Depth -1,
 			Op is (Side+1) mod 2,
 			minimax(Op,Deeper,Min,RetrievedVal,_),
-			retractall(board(_,_,_)),asserta(board(TerrainMap,BF,KHAN))
+			retractall(board(_,_,_)),asserta(board(TerrainMap,BF,KHAN)) %clone
 		),
 		ValMovePairs
 	),
-	groupby(ValMovePairs,Vals,Moves),
+	regroup(ValMovePairs,Vals,Moves),
 	(
 		Max == 1,
 		max_list(Vals,BestVal),
