@@ -1,6 +1,7 @@
 % Projet IA02
 :- include('movementRules.pl').
 :- include('jeuDeKHAN_lib.pl').
+:- include('translatedic.pl').
 :- dynamic(board/3).
 
 terrainMap([2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]).
@@ -88,19 +89,25 @@ allPossibleMove(Side,AllPossibleMoves):-
 	),distributer(Result,AllPossibleMoves),!.
 % tryMove prevents friendly fire
 tryMove(Pos,TerrainMap,BF,KHAN,Result):-
-	Pos<36, nth0(Pos,TerrainMap,Step),%obeying terrainMap
 	(
-		KHAN == Step
+		Pos<36, nth0(Pos,TerrainMap,Step),%obeying terrainMap
+		(
+			KHAN == Step
+		;
+			KHAN == 0
+		;
+			write('Obey the KHAN!'),nl,fail
+		),
+		possMove(Step,Pos,Tmp),indexOf(BF,Pos,N),
+		(
+			N=<5,%side 0
+			slice(1,6,BF,Side0),subtract(Tmp,Side0,Result)
+		;
+			N>5,%side 1
+			slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
+		)
 	;
-		KHAN == 0
-	),
-	possMove(Step,Pos,Tmp),indexOf(BF,Pos,N),
-	(
-		N=<5,%side 0
-		slice(1,6,BF,Side0),subtract(Tmp,Side0,Result)
-	;
-		N>5,%side 1
-		slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
+		Pos==44
 	),!.
 
 % move gives the consiquence of a move
@@ -150,8 +157,7 @@ minimax(Side,0,Max,Val,_):-
 	SideAbs is (Side+Max+1) mod 2,
 	evaluate(SideAbs,BF,Val,0),!.
 % board(T,BF,K), Board = [T,BF,K],nth(1,Board,TerrainMap),nth(2,Board,BF),nth(3,Board,KHAN),
-% minimax(Side,3,1,Val,BestMove)
-
+% minimax(Side,Depth,1,Val,BestMove)
 minimax(Side,Depth,Max,BestVal,BestMove):-
 	(
 		Max == 1,
@@ -167,10 +173,11 @@ minimax(Side,Depth,Max,BestVal,BestMove):-
 			board(TerrainMap,BF,KHAN),
 			nth(1,APossibleMove,From),nth(2,APossibleMove,To),
 			move(From,To),
-			Min is (Max+1) mod 2,
-			Deeper is Depth -1,
 			Op is (Side+1) mod 2,
-			minimax(Op,Deeper,Min,RetrievedVal,_),
+				Min is (Max+1) mod 2,
+				Deeper is Depth - 1,
+				minimax(Op,Deeper,Min,RetrievedVal,_),
+
 			retractall(board(_,_,_)),asserta(board(TerrainMap,BF,KHAN)) %clone
 		),
 		ValMovePairs
@@ -185,8 +192,13 @@ minimax(Side,Depth,Max,BestVal,BestMove):-
 		min_list(Vals,BestVal),
 		indexOf(Vals,BestVal,MinValInx),
 		nth0(MinValInx,Moves,BestMove)
-	)
-		,!.
+	),!.
+
+gameOver(0):-
+	board(_,BF,_),nth(6,BF,Q),Q==44.
+gameOver(1):-
+	board(_,BF,_),nth(12,BF,Q),Q==44.
+
 % evaluate(Side,BF,Val,0)
 evaluate(Side,BF,Val,Flag):-
 	(
@@ -221,3 +233,85 @@ countPawns([Camarade|Rest],Return):-
 	;
 	Return is V
 	),!.
+
+% UI.
+choosemode(Mode):-
+	write('Choose the mode of play:' ), nl,
+	write('1. Human VS Computer'),nl,
+	write('2. Human VS Human'),nl,
+	write('3. Computer VS Computer'),nl,read(Mode).
+
+play :-
+    nl,
+    write('======================================'), nl,
+	write('========== Prolog Jeu de KHAN ========'), nl,
+	write('======================================'), nl, nl,
+	write('Copy Right of Siyu ZHANG & Mengjia SUI'), nl,
+	choosemode(Mode),
+	(
+		Mode == 1,
+		playAskColor
+	;
+		true
+		%TODO: pvp
+		%TODO: ai Vs ai
+	).
+
+%playAskColor
+% Ask the color for the human player and start the game with it.
+playAskColor :-
+	  nl, write('Side for human player ? ("o" for first and "x" for second)'), nl,
+	  read(Player), nl,
+	  (
+	    Player \= o, Player \= x, !,    % If not x or o -> not a valid color
+	    write('Error : This is not a valid side !'), nl,
+	    playAskColor                     % Ask again
+	    ;
+		terrainMap(TerrainMap),
+		asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
+		nl, afficherBoard, nl,
+
+		write('Position for Queen, position from a0,a1 to f4,f5'), nl,
+	    read(Reine), nl, write('OK Queen'), nl, translate(Reine,R),
+		write('Positions for Pawn_1, position from a0 to f5'), nl,
+		read(S1), nl, write('OK Pawn_1'), nl, translate(S1,R1),
+		write('Positions for Pawn_1, position from a0 to f5'), nl,
+		read(S2), nl, write('OK Pawn_2'), nl, translate(S2,R2),
+		write('Positions for Pawn_3, position from a0 to f5'), nl,
+		read(S3), nl, write('OK Pawn_3'), nl, translate(S3,R3),
+		write('Positions for Pawn_4, position from a0 to f5'), nl,
+		read(S4), nl, write('OK Pawn_4'), nl, translate(S4,R4),
+		write('Positions for Pawn_4, position from a0 to f5'), nl,
+		read(S5), nl, write('OK Pawn_5'), nl, translate(S5,R5),
+	    write('UserInitBoard Finish'), nl,
+		% valeurKhan(R,[2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1],K),
+		(Player = o,
+			retract(board(_,_,_)),%delete old empty board,
+			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,33, 35, 28, 20, 30, 13],0)), nl, afficherBoard
+			%TODO: an opening configuration!
+		 ;
+		 Player = x,
+		 	retract(board(_,_,_)),%delete old empty board,
+			asserta(board(TerrainMap,[44, 44, 44, 44, 44, 44,R1,R2,R3,R4,R5,R],0)), nl, afficherBoard
+		)
+	  ).
+ % User Move
+ userMove:- nl, write('It\'s your turn !'), nl,
+			    write('Which one would you want to move ?'), nl,
+				read(Pos),nl, translate(Pos, Position),
+				board(T,BF,K),
+				tryMove(Position,T,BF,K,CouldGo),
+				write('Where would you like to put it ?'),nl,
+				read(Dest),nl, translate(Dest, Destination),
+				(
+					\+ member(Destination,CouldGo),
+					write('Can\'t move like that'),
+					userMove
+				;
+					true
+				),
+				move(Position,Destination).
+
+% % Decide first KHAN
+% valeurKhan(1,[T|_],T):- !.
+% valeurKhan(R,[_|Q],Res):- R2 is R-1, valeurKhan(R2,Q,Res).
