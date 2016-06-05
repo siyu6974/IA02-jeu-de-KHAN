@@ -46,7 +46,7 @@ afficherBoard:-
 
 initBoard :-
 	terrainMap(TerrainMap),
-    asserta(board(TerrainMap,[0, 1, 3, 44, 44, 4, 16, 44, 17, 10, 5, 44],1)).
+    asserta(board(TerrainMap,[0, 1, 3, 5,7, 4, 33, 35, 28, 20, 30, 13],1)).
 
 % allPossibleMove(Side,Result)
 allPossibleMove(Side,AllPossibleMoves):-
@@ -59,7 +59,8 @@ allPossibleMove(Side,AllPossibleMoves):-
 	findall(
 		[Piece|PossibleMove],
 		(member(Piece,Camarades),tryMove(Piece,TerrainMap,BF,KHAN,PossibleMove)),
-		R1),
+		R1
+	),
 	(
 		length(R1,Len),
 		%KHAN sucks
@@ -147,28 +148,45 @@ resurrect(Side,Dest):-
 minimax(Side,0,Max,Val,_):-
 	board(_,BF,_),
 	SideAbs is (Side+Max+1) mod 2,
-	evaluate(SideAbs,BF,Val,0).
+	evaluate(SideAbs,BF,Val,0),!.
 % board(T,BF,K), Board = [T,BF,K],nth(1,Board,TerrainMap),nth(2,Board,BF),nth(3,Board,KHAN),
 % minimax(Side,3,1,Val,BestMove)
-minimax(Side,Depth,Max,Val,BestMove):-
-	allPossibleMove(Side,PossibleMoves),
-	member(APossibleMove,PossibleMoves),
-	board(TerrainMap,BF,KHAN),
-	asserta(board(TerrainMap,BF,KHAN)),%Clone
-	nth(1,APossibleMove,From),nth(2,APossibleMove,To),
-	move(From,To),
-	Min is (Max+1) mod 2,
-	Deeper is Depth -1,
-	Op is (Side+1) mod 2,
-	minimax(Op,Deeper,Min,RetrievedVal,APossibleMove),
+
+minimax(Side,Depth,Max,BestVal,BestMove):-
 	(
 		Max == 1,
-		max(Val,RetrievedVal,Val)
+		ValInit = -10000
 	;
-		min(Val,RetrievedVal,Val)
+		ValInit = 10000
+	),!,
+	allPossibleMove(Side,PossibleMoves),
+	findall(
+		[RetrievedVal,APossibleMove],
+		(
+			member(APossibleMove,PossibleMoves),
+			board(TerrainMap,BF,KHAN),
+			nth(1,APossibleMove,From),nth(2,APossibleMove,To),
+			move(From,To),
+			Min is (Max+1) mod 2,
+			Deeper is Depth -1,
+			Op is (Side+1) mod 2,
+			minimax(Op,Deeper,Min,RetrievedVal,_),
+			retractall(board(_,_,_)),asserta(board(TerrainMap,BF,KHAN))
+		),
+		ValMovePairs
+	),
+	groupby(ValMovePairs,Vals,Moves),
+	(
+		Max == 1,
+		max_list(Vals,BestVal),
+		indexOf(Vals,BestVal,MaxValInx),
+		nth0(MaxValInx,Moves,BestMove)
+		;
+		min_list(Vals,BestVal),
+		indexOf(Vals,BestVal,MinValInx),
+		nth0(MinValInx,Moves,BestMove)
 	)
-
-
+		,!.
 % evaluate(Side,BF,Val,0)
 evaluate(Side,BF,Val,Flag):-
 	(
@@ -203,68 +221,3 @@ countPawns([Camarade|Rest],Return):-
 	;
 	Return is V
 	),!.
-
-main:-initBoard,choosemode.
-% UI.
-choosemode:-
-	write('Choose the mode of play:' ), nl,
-	write('1 Human VS Computer'),nl,
-	write('2 Computer VS Human'),nl,
-	write('3 Human VS Human'),nl,
-	write('4 Computer VS Computer'),nl,
-	write('Type mode(Choice) to enter your choice please.').
-
-mode(1):-write('Human VS Computer, Good luck!'),nl,afficherBoard.
-mode(2):-write('Computer VS Human, Good luck!'),nl,afficherBoard.
-mode(3):-write('Human VS Human, Good luck!'),nl,afficherBoard.
-mode(4):-write('Computer VS Computer'),nl,afficherBoard.
-
-
-play :-
-    nl,
-    write('==================================='), nl,
-	write('======== Prolog Jeu de KHAN ======='), nl,
-	write('==================================='), nl, nl,
-	write('@Right of Siyu ZHANG & Mengjia SUI'), nl,
-	playAskColor.
-
-%playAskColor
-% Ask the color for the human player and start the game with it.
-playAskColor :-
-	  nl, write('Side for human player ? ("x" for first and "o" for second)'), nl,
-	  read(Player), nl,
-	  (
-	    Player \= o, Player \= x, !,    % If not x or o -> not a valid color
-	    write('Error : This is not a valid side !'), nl,
-	    playAskColor                     % Ask again
-	    ;
-		terrainMap(TerrainMap),
-		asserta(board(TerrainMap,['','','','','','','', '', '', '', '', ''],?)),
-		nl, afficherBoard, nl,
-		write('Position for Queen, position from A0 to F5'), nl,
-	    read(Queen), nl, write('OK Queen'), nl,
-		write('Positions for siyu1, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu1'), nl,
-		write('Positions for siyu2, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu2'), nl,
-		write('Positions for siyu3, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu3'), nl,
-		write('Positions for siyu4, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu4'), nl,
-		write('Positions for siyu5, position from A0 to F5'), nl,
-		read(Player), nl, write('OK siyu5'), nl,
-	    % Start the game with color and emptyBoard
-
-	    write('UserInitBoard Finish'), nkl,
-		asserta(board(TerrainMap,['A0','','','','','','', '', '', '', '', ''],?)),
-		nl, afficherBoard
-		%play([x, play, EmptyBoard], Player)
-	  ).
-translate(a0,0).
- % User Move
- userMove:- nl, write('It\'s your turn !'), nl,
-			    write('Which one would you want to move ?'), nl,
-				read(Pos),nl,
-				write('Where would you like to put it ?'),nl,
-				read(Dest),nl,
-				move(Pos,Dest).

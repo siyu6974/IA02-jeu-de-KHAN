@@ -15,6 +15,7 @@ slice(Start,End,[_|T],Sublist) :-
     Start > 1, StartT is Start - 1,
     EndT is End - 1, slice(StartT,EndT,T,Sublist).
 
+%start at 0
 indexOf([Element|_], Element, 0).
 indexOf([_|Tail], Element, Index):-
 	  indexOf(Tail, Element, Index1),
@@ -56,3 +57,7 @@ distributer([[H|R]|Tail],Return):-
 subdistributer(_,[],[]):-!.
 subdistributer(H,[S|RList],[[H,S]|NextPair]):-
     subdistributer(H,RList,NextPair).
+
+groupby(L,L1,L2):-
+    maplist(nth(1),L,L1),
+    maplist(nth(2),L,L2).
