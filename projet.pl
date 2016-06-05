@@ -42,7 +42,7 @@ printDeadPiece(BF):- findall(Index,
 afficherBoard:-
 	board(TerrainMap,BF,KHAN),write(' '),printMatrix(TerrainMap,6),
 	nl, printBattleField(-1,0,BF),nl,write('   '),
-	printDeadPiece(BF),!,nl,write('KHAN = '),write(KHAN).
+	printDeadPiece(BF),!,nl,write('KHAN = '),write(KHAN),nl.
 
 
 initBoard :-
@@ -89,25 +89,19 @@ allPossibleMove(Side,AllPossibleMoves):-
 	),distributer(Result,AllPossibleMoves),!.
 % tryMove prevents friendly fire
 tryMove(Pos,TerrainMap,BF,KHAN,Result):-
+	Pos<36, nth0(Pos,TerrainMap,Step),%obeying terrainMap
 	(
-		Pos<36, nth0(Pos,TerrainMap,Step),%obeying terrainMap
-		(
-			KHAN == Step
-		;
-			KHAN == 0
-		;
-			write('Obey the KHAN!'),nl,fail
-		),
-		possMove(Step,Pos,Tmp),indexOf(BF,Pos,N),
-		(
-			N=<5,%side 0
-			slice(1,6,BF,Side0),subtract(Tmp,Side0,Result)
-		;
-			N>5,%side 1
-			slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
-		)
+		KHAN == Step
 	;
-		Pos==44
+		KHAN == 0
+	),
+	possMove(Step,Pos,Tmp),indexOf(BF,Pos,N),
+	(
+		N=<5,%side 0
+		slice(1,6,BF,Side0),subtract(Tmp,Side0,Result)
+	;
+		N>5,%side 1
+		slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
 	),!.
 
 % move gives the consiquence of a move
@@ -174,10 +168,9 @@ minimax(Side,Depth,Max,BestVal,BestMove):-
 			nth(1,APossibleMove,From),nth(2,APossibleMove,To),
 			move(From,To),
 			Op is (Side+1) mod 2,
-				Min is (Max+1) mod 2,
-				Deeper is Depth - 1,
-				minimax(Op,Deeper,Min,RetrievedVal,_),
-
+			Min is (Max+1) mod 2,
+			Deeper is Depth - 1,
+			minimax(Op,Deeper,Min,RetrievedVal,_),
 			retractall(board(_,_,_)),asserta(board(TerrainMap,BF,KHAN)) %clone
 		),
 		ValMovePairs
@@ -250,23 +243,48 @@ play :-
 	choosemode(Mode),
 	(
 		Mode == 1,
-		playAskColor
+		playerAskColor(HumainSide),playerInitBoard(HumainSide)
 	;
 		true
 		%TODO: pvp
 		%TODO: ai Vs ai
-	).
+	),!,start(0,HumainSide).
+
+% XXX: HumainSide = 3 if Computer vs Computer
+start(SideToPlay,HumainSide):-
+	Op is (SideToPlay+1) mod 2,
+	(
+		SideToPlay == HumainSide,
+		userMove(SideToPlay)
+	;
+		minimax(SideToPlay,3,1,_,BestMove),
+		nth(1,BestMove,From),nth(2,BestMove,To),
+		move(From,To)
+	),!,afficherBoard,
+	(
+		\+ gameOver(0), \+gameOver(1),start(Op,HumainSide)
+	;
+		nl,write('GAMEOVER')
+	),!.
 
 %playAskColor
 % Ask the color for the human player and start the game with it.
-playAskColor :-
-	  nl, write('Side for human player ? ("o" for first and "x" for second)'), nl,
-	  read(Player), nl,
-	  (
-	    Player \= o, Player \= x, !,    % If not x or o -> not a valid color
-	    write('Error : This is not a valid side !'), nl,
-	    playAskColor                     % Ask again
-	    ;
+playerAskColor(HumainSide) :-
+	nl, write('Side for human player ? ("o" for first and "x" for second)'), nl,
+	read(Player), nl,
+	(
+		Player == o,
+		HumainSide = 0
+	;
+		Player == x,
+		HumainSide = 1
+	;
+	    % If not x or o -> not a valid color
+		write('Error : This is not a valid side !'), nl,
+		playerAskColor(HumainSide)      % Ask again
+	),!.
+
+playerInitBoard(HumainSide):-
 		terrainMap(TerrainMap),
 		asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
 		nl, afficherBoard, nl,
@@ -284,34 +302,41 @@ playAskColor :-
 		write('Positions for Pawn_4, position from a0 to f5'), nl,
 		read(S5), nl, write('OK Pawn_5'), nl, translate(S5,R5),
 	    write('UserInitBoard Finish'), nl,
-		% valeurKhan(R,[2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1],K),
-		(Player = o,
+		(HumainSide == 0,
 			retract(board(_,_,_)),%delete old empty board,
 			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,33, 35, 28, 20, 30, 13],0)), nl, afficherBoard
 			%TODO: an opening configuration!
 		 ;
-		 Player = x,
+		 HumainSide == 1,
 		 	retract(board(_,_,_)),%delete old empty board,
 			asserta(board(TerrainMap,[44, 44, 44, 44, 44, 44,R1,R2,R3,R4,R5,R],0)), nl, afficherBoard
-		)
-	  ).
+		),!.
  % User Move
- userMove:- nl, write('It\'s your turn !'), nl,
-			    write('Which one would you want to move ?'), nl,
+ userMove(Side):- nl, write('It\'s your turn !'), nl,
+			    write('Which one would you want to move ? 44 for resurrection'), nl,
 				read(Pos),nl, translate(Pos, Position),
 				board(T,BF,K),
-				tryMove(Position,T,BF,K,CouldGo),
+				(
+					Position =:= 44,
+					resurrectionTarget(BF,Side,_) %true if can resurrect
+				;
+					%nothing to resurrect or moving normally
+					tryMove(Position,T,BF,K,CouldGo) % true if Pos can move
+				;
+					write('Nope'),nl,
+					userMove(Side) % retry
+				),!,
 				write('Where would you like to put it ?'),nl,
 				read(Dest),nl, translate(Dest, Destination),
 				(
-					\+ member(Destination,CouldGo),
-					write('Can\'t move like that'),
-					userMove
+					member(Destination,CouldGo),
+					move(Position,Destination)
 				;
-					true
-				),
-				move(Position,Destination).
-
-% % Decide first KHAN
-% valeurKhan(1,[T|_],T):- !.
-% valeurKhan(R,[_|Q],Res):- R2 is R-1, valeurKhan(R2,Q,Res).
+					Position =:= 44,
+					tryResurrect(T,GardenTomb,K),
+					member(Destination,GardenTomb),
+					resurrect(Side,Destination)
+				;
+					write('Can\'t do like that'),
+					userMove(Side)
+				),!.
