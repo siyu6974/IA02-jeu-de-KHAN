@@ -42,12 +42,13 @@ printDeadPiece(BF):- findall(Index,
 afficherBoard:-
 	board(TerrainMap,BF,KHAN),write(' '),printMatrix(TerrainMap,6),
 	nl, printBattleField(-1,0,BF),nl,write('   '),
-	printDeadPiece(BF),!,nl,write('KHAN = '),write(KHAN),nl.
+	printDeadPiece(BF),!,nl,write('KHAN = '),write(KHAN),nl,nl.
 
 
 initBoard :-
 	terrainMap(TerrainMap),
-    asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],1)).
+    % asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],1)).
+	asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],3)).
 
 % allPossibleMove(Side,Result)
 allPossibleMove(Side,AllPossibleMoves):-
@@ -135,13 +136,14 @@ resurrectionPosition(BF,TerrainMap,KHAN,GardenTomb):-
 		Tmp
 	),
 	subtract(Tmp,BF,GardenTomb).
-
-tryResurrect(TerrainMap,Dest,KHAN):-
-	nth0(Dest,TerrainMap,Terrain), KHAN == Terrain.
+% tryResurrect: wraps resurrectionTarget and resurrectionPosition
+tryResurrect(Side,GardenTomb):-
+	board(T,BF,KHAN),
+	resurrectionTarget(BF,Side,_),
+	resurrectionPosition(BF,T,KHAN,GardenTomb).
 resurrect(Side,Dest):-
 	board(TerrainMap,BF,KHAN),
 	resurrectionTarget(BF,Side,TargetIndex),
-	tryResurrect(TerrainMap,Dest,KHAN),
 	modifyList2(TargetIndex,Dest,BF,FinBF,0),
 	retract(board(_,BF,_)),%delete old board,
 	asserta(board(TerrainMap,FinBF,KHAN)),!.
@@ -316,10 +318,11 @@ playerInitBoard(HumainSide):-
 			asserta(board(TerrainMap,[44, 44, 44, 44, 44, 44,R1,R2,R3,R4,R5,R],0)), nl, afficherBoard
 		),!.
  % User Move
+ flag.
  userMove(Side):- nl, write('It\'s your turn !'), nl,
 			    write('Which one would you want to move ? 44 for resurrection'), nl,
 				read(Pos),nl, translate(Pos, Position),
-				board(T,BF,K),
+				board(T,BF,_),
 				(
 					Position =:= 44,
 					resurrectionTarget(BF,Side,_) %true if can resurrect
@@ -333,14 +336,14 @@ playerInitBoard(HumainSide):-
 					userMove(Side) % retry
 				),!,
 				write('Where would you like to put it ?'),nl,
-				tryMove(Position,T,BF,0,CouldGo), % KHAN is 0, since we are sure that piece can move
 				read(Dest),nl, translate(Dest, Destination),
 				(
+					tryMove(Position,T,BF,0,CouldGo), % KHAN is 0, since we are sure that piece can move
 					member(Destination,CouldGo),
 					move(Position,Destination)
 				;
 					Position =:= 44,
-					tryResurrect(T,GardenTomb,K),
+					tryResurrect(Side,GardenTomb),
 					member(Destination,GardenTomb),
 					resurrect(Side,Destination)
 				;
