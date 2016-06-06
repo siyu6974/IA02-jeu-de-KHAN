@@ -47,7 +47,7 @@ afficherBoard:-
 
 initBoard :-
 	terrainMap(TerrainMap),
-    asserta(board(TerrainMap,[0, 1, 3, 5,7, 4, 33, 35, 28, 20, 30, 13],1)).
+    asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],1)).
 
 % allPossibleMove(Side,Result)
 allPossibleMove(Side,AllPossibleMoves):-
@@ -233,6 +233,10 @@ choosemode(Mode):-
 	write('1. Human VS Computer'),nl,
 	write('2. Human VS Human'),nl,
 	write('3. Computer VS Computer'),nl,read(Mode).
+test:-
+	terrainMap(TerrainMap),
+	asserta(board(TerrainMap,[0,1,11,5,6,3, 30, 31, 27, 29, 25, 35],0)),
+	afficherBoard,start(0,0).
 
 play :-
     nl,
@@ -321,12 +325,15 @@ playerInitBoard(HumainSide):-
 					resurrectionTarget(BF,Side,_) %true if can resurrect
 				;
 					%nothing to resurrect or moving normally
-					tryMove(Position,T,BF,K,CouldGo) % true if Pos can move
+					allPossibleMove(Side,AllPossibleMoves),
+					regroup(AllPossibleMoves,CouldMove,_),
+					member(Position,CouldMove)% true if Pos can move
 				;
-					write('Nope'),nl,
+					write('Nope, can\' move that'),nl,
 					userMove(Side) % retry
 				),!,
 				write('Where would you like to put it ?'),nl,
+				tryMove(Position,T,BF,0,CouldGo), % KHAN is 0, since we are sure that piece can move
 				read(Dest),nl, translate(Dest, Destination),
 				(
 					member(Destination,CouldGo),
