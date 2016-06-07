@@ -305,6 +305,10 @@ def minimax(node, depth, maximizingPlayer,board,side,evalFunc=evaluate):
 def minimaxWithAlphaBeta(node, depth, alpha, beta, maximizingPlayer,side,depthConst,evalFunc):
     newSide = (side+1) % 2
     returnMove = (36,36)
+    gameOverCheck = gameIsOver(node)
+    if gameOverCheck != -1:
+        sideAbs = int(not maximizingPlayer)+side)%2
+        return (gameOverCheck*2-1)*1000*(-1)*(sideAbs*2-1) #cut 
     if depth == 0:
         return evalFunc(node,(int(not maximizingPlayer)+side)%2),returnMove
     if maximizingPlayer:

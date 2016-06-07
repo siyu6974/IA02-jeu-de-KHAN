@@ -48,7 +48,7 @@ afficherBoard:-
 initBoard :-
 	terrainMap(TerrainMap),
     % asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],1)).
-	asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],3)).
+	asserta(board(TerrainMap,[44,44,44,5,13,11, 44, 44, 44, 44, 44, 29],3)).
 
 % allPossibleMove(Side,Result)
 allPossibleMove(Side,AllPossibleMoves):-
@@ -105,15 +105,17 @@ tryMove(Pos,TerrainMap,BF,KHAN,Result):-
 			slice(7,12,BF,Side1),subtract(Tmp,Side1,Result)
 		),!.
 
-% move gives the consiquence of a move
-move(Pos,Dest) :-
-	board(TerrainMap,BF,_), indexOf(BF,Pos,N),
+% move shows the consiquence of a move
+move(44,Side,Dest) :-
+	resurrect(Side,Dest),!.
+move(Pos,Side,Dest) :-
+	board(TerrainMap,BF,_),
 	(
-		N=<5,%side 0 moving
+		Side==0,%side 0 moving
 		slice(7,12,BF,Side1),member(Dest,Side1),
 		modifyList(Dest,44,BF,NewBF), modifyList(Pos,Dest,NewBF,FinBF)%capture
 	;
-		N>5,%side 1 moving
+		Side==1,%side 1 moving
 		slice(1,6,BF,Side0),member(Dest,Side0),
 		modifyList(Dest,44,BF,NewBF), modifyList(Pos,Dest,NewBF,FinBF)%capture
 	;
@@ -127,7 +129,7 @@ move(Pos,Dest) :-
 resurrectionTarget(BF,0,TargetIndex):-
 	slice(1,5,BF,Side0), indexOf(Side0,44,TargetIndex).
 resurrectionTarget(BF,1,TargetIndex):-
-	slice(7,11,BF,Side1),indexOf(Side1,44,TargetIndex).
+	slice(7,11,BF,Side1),indexOf(Side1,44,TargetI),TargetIndex is TargetI+6.
 
 resurrectionPosition(BF,TerrainMap,KHAN,GardenTomb):-
 	setof(
@@ -152,15 +154,14 @@ minimax(Side,0,Max,Val,_):-
 	board(_,BF,_),
 	SideAbs is (Side+Max+1) mod 2,
 	evaluate(SideAbs,BF,Val,0),!.
-% board(T,BF,K), Board = [T,BF,K],nth(1,Board,TerrainMap),nth(2,Board,BF),nth(3,Board,KHAN),
-% minimax(Side,Depth,1,Val,BestMove)
+minimax(Side,_,1,BestVal,_):-
+	gameOver(Side),
+	BestVal is -1000,!.
+minimax(Side,_,0,BestVal,_):-
+	gameOver(Side),
+	BestVal is 1000,!.
+% minimax(Side,Depth,1,Val,BestMove) SideAbs === initial Side
 minimax(Side,Depth,Max,BestVal,BestMove):-
-	(
-		Max == 1,
-		ValInit = -10000
-	;
-		ValInit = 10000
-	),!,
 	allPossibleMove(Side,PossibleMoves),
 	findall(
 		[RetrievedVal,APossibleMove],
@@ -168,7 +169,7 @@ minimax(Side,Depth,Max,BestVal,BestMove):-
 			member(APossibleMove,PossibleMoves),
 			board(TerrainMap,BF,KHAN),
 			nth(1,APossibleMove,From),nth(2,APossibleMove,To),
-			move(From,To),
+			move(From,Side,To),
 			Op is (Side+1) mod 2,
 			Min is (Max+1) mod 2,
 			Deeper is Depth - 1,
@@ -177,6 +178,7 @@ minimax(Side,Depth,Max,BestVal,BestMove):-
 		),
 		ValMovePairs
 	),
+	(Depth==4,write(ValMovePairs);true),
 	regroup(ValMovePairs,Vals,Moves),
 	(
 		Max == 1,
@@ -241,7 +243,7 @@ test:-
 	afficherBoard,start(0,0).
 
 play :-
-    nl,
+    nl,retractall(board(_,_,_)),
     write('======================================'), nl,
 	write('========== Prolog Jeu de KHAN ========'), nl,
 	write('======================================'), nl, nl,
@@ -265,7 +267,8 @@ start(SideToPlay,HumainSide):-
 	;
 		minimax(SideToPlay,3,1,_,BestMove),
 		nth(1,BestMove,From),nth(2,BestMove,To),
-		move(From,To)
+		write(BestMove),nl,
+		move(From,SideToPlay,To)
 	),!,afficherBoard,
 	(
 		\+ gameOver(0), \+gameOver(1),start(Op,HumainSide)
@@ -318,35 +321,41 @@ playerInitBoard(HumainSide):-
 			asserta(board(TerrainMap,[44, 44, 44, 44, 44, 44,R1,R2,R3,R4,R5,R],0)), nl, afficherBoard
 		),!.
  % User Move
- flag.
- userMove(Side):- nl, write('It\'s your turn !'), nl,
-			    write('Which one would you want to move ? 44 for resurrection'), nl,
-				read(Pos),nl, translate(Pos, Position),
-				board(T,BF,_),
-				(
-					Position =:= 44,
-					resurrectionTarget(BF,Side,_) %true if can resurrect
-				;
-					%nothing to resurrect or moving normally
-					allPossibleMove(Side,AllPossibleMoves),
-					regroup(AllPossibleMoves,CouldMove,_),
-					member(Position,CouldMove)% true if Pos can move
-				;
-					write('Nope, can\' move that'),nl,
-					userMove(Side) % retry
-				),!,
-				write('Where would you like to put it ?'),nl,
-				read(Dest),nl, translate(Dest, Destination),
-				(
-					tryMove(Position,T,BF,0,CouldGo), % KHAN is 0, since we are sure that piece can move
-					member(Destination,CouldGo),
-					move(Position,Destination)
-				;
-					Position =:= 44,
-					tryResurrect(Side,GardenTomb),
-					member(Destination,GardenTomb),
-					resurrect(Side,Destination)
-				;
-					write('Can\'t do like that'),
-					userMove(Side)
-				),!.
+userMove(Side):-
+	userMoveFrom(Side,_),
+	userMoveTo(Side,_).
+
+userMoveFrom(Side,Position):-
+	nl, write('It\'s your turn !'), nl,
+    write('Which one would you want to move ? 44 for resurrection'), nl,
+	read(Pos),nl, translate(Pos, Position),
+	board(_,BF,_),
+	(
+		Position =:= 44,
+		resurrectionTarget(BF,Side,_) %true if can resurrect
+	;
+		%nothing to resurrect or moving normally
+		allPossibleMove(Side,AllPossibleMoves),
+		regroup(AllPossibleMoves,CouldMove,_),
+		member(Position,CouldMove)% true if Pos can move
+	;
+		write('Nope, can\'t move that piece'),nl,
+		userMoveFrom(Side,_) % retry
+	),!.
+userMoveTo(Side,Position):-
+	board(T,BF,_),
+	write('Where would you like to put it ?'),nl,
+	read(Dest),nl, translate(Dest, Destination),
+	(
+		tryMove(Position,T,BF,0,CouldGo), % KHAN is 0, since we are sure that piece can move
+		member(Destination,CouldGo),
+		move(Position,Side,Destination)
+	;
+		Position =:= 44,
+		tryResurrect(Side,GardenTomb),
+		member(Destination,GardenTomb),
+		resurrect(Side,Destination)
+	;
+		write('Can\'t do that'),
+		userMoveTo(Side,_)
+	),!.
