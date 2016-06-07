@@ -268,7 +268,6 @@ play :-
 		retractall(board(_,_,_)),
 		asserta(board(S,InitBF,0)),
 		HumainSide = 3
-		%TODO: ai Vs ai
 	),!,start(0,HumainSide).
 
 start(SideToPlay,HumainSide):-
