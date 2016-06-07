@@ -36,7 +36,7 @@ diagonale1(Carre,D1):-diagonale_1(1,Carre,D1).
 
 diagonale_2(1,[L],[X]):-element_n(1,L,X),!.
 diagonale_2(J,[L|Q],[X|D2Res]):-element_n(J,L,X),K is J-1,diagonale_2(K,Q,D2Res).
-diagole2(Carre,D2):-dimension(Carre,Dim),diagonale_2(Dim,Carre,D2).
+diagonale2(Carre,D2):-dimension(Carre,Dim),diagonale_2(Dim,Carre,D2).
 
 %
 composantes(Carre,Comp):-
@@ -53,10 +53,11 @@ meme_somme([T|Q],S):-somme(T,S),meme_somme(Q,S).
 
 % Partie 2
 genere_liste(1,[1]).
-genere_liste(UB,[UB,L]):-NB is UB-1, genere_liste(NB,L).
+genere_liste(UB,Nbs):-NB is UB-1, genere_liste(NB,L),concat(L,[UB],Nbs).
 
 retire_el([T|Q],T,Q).
 retire_el([T|Q],X,[T|LRes]):-retire_el(Q,X,LRes).
+retire_el(L,X,L):- \+member(X,L). % 如果x 不在其中的情况
 
 genere_ligne(0,listeNbs,[],ListeNbs):-!.
 genere_ligne(N,ListeNbs,[X|Reste],ListeNbsR):-retire_el(ListeNbs,X,RTemp),M is N-1, genere_ligne(M,RTemp,Reste,ListeNbsR).

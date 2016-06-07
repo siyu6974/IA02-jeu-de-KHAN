@@ -2,8 +2,8 @@
 :- include('movementRules.pl').
 :- include('jeuDeKHAN_lib.pl').
 :- include('translatedic.pl').
+:- include('opening.pl').
 :- dynamic(board/3).
-
 terrainMap([2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]).
 printMatrix([],_).
 printMatrix(L,0) :- nl,write(' '),printMatrix(L,6),!.
@@ -178,7 +178,6 @@ minimax(Side,Depth,Max,BestVal,BestMove):-
 		),
 		ValMovePairs
 	),
-	(Depth==4,write(ValMovePairs);true),
 	regroup(ValMovePairs,Vals,Moves),
 	(
 		Max == 1,
@@ -250,24 +249,36 @@ play :-
 	write('Copy Right of Siyu ZHANG & Mengjia SUI'), nl,
 	choosemode(Mode),
 	(
-		Mode == 1,
+		Mode =:= 1,
 		playerAskColor(HumainSide),playerInitBoard(HumainSide)
+		% TODO: 难度选择 参数见lib
 	;
-		true
+		Mode =:= 2
 		%TODO: pvp
+	;
+		Mode =:= 3,
+		aiInitBoard(AiOpening),
+		choose([s1,s2,s3,s4],RandS),
+		translate(RandS,S),
+		append(AiOpening,[44,44,44,44,44,44],AfterOpening),
+		asserta(board(S,AfterOpening,0)),
+
+		aiReact(BestAiReact),
+		append(AiOpening,BestAiReact,InitBF),
+		retractall(board(_,_,_)),
+		asserta(board(S,InitBF,0)),
+		HumainSide = 3
 		%TODO: ai Vs ai
 	),!,start(0,HumainSide).
 
-% XXX: HumainSide = 3 if Computer vs Computer
 start(SideToPlay,HumainSide):-
 	Op is (SideToPlay+1) mod 2,
 	(
 		SideToPlay == HumainSide,
 		userMove(SideToPlay)
 	;
-		minimax(SideToPlay,3,1,_,BestMove),
+		minimax(SideToPlay,4,1,_,BestMove),
 		nth(1,BestMove,From),nth(2,BestMove,To),
-		write(BestMove),nl,
 		move(From,SideToPlay,To)
 	),!,afficherBoard,
 	(
@@ -293,32 +304,60 @@ playerAskColor(HumainSide) :-
 		playerAskColor(HumainSide)      % Ask again
 	),!.
 
+placementValid(R,R1,R2,R3,R4,R5):-
+	(
+		member(R,[0,1,2,3,4,5,6,7,8,9,10,11]),
+		member(R1,[0,1,2,3,4,5,6,7,8,9,10,11]),
+		member(R2,[0,1,2,3,4,5,6,7,8,9,10,11]),
+		member(R3,[0,1,2,3,4,5,6,7,8,9,10,11]),
+		member(R4,[0,1,2,3,4,5,6,7,8,9,10,11]),
+		member(R5,[0,1,2,3,4,5,6,7,8,9,10,11]),
+		write('OK'),nl % true if place in first two lines
+	;
+		write('Nope, can\'t place your pieces like that'),nl,
+		write('Entre "play." to restart!'),nl,
+		fail
+	),!.
+
 playerInitBoard(HumainSide):-
 		terrainMap(TerrainMap),
 		asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
 		nl, afficherBoard, nl,
-
-		write('Position for Queen, position from a0,a1 to f4,f5'), nl,
-	    read(Reine), nl, write('OK Queen'), nl, translate(Reine,R),
-		write('Positions for Pawn_1, position from a0 to f5'), nl,
-		read(S1), nl, write('OK Pawn_1'), nl, translate(S1,R1),
-		write('Positions for Pawn_1, position from a0 to f5'), nl,
-		read(S2), nl, write('OK Pawn_2'), nl, translate(S2,R2),
-		write('Positions for Pawn_3, position from a0 to f5'), nl,
-		read(S3), nl, write('OK Pawn_3'), nl, translate(S3,R3),
-		write('Positions for Pawn_4, position from a0 to f5'), nl,
-		read(S4), nl, write('OK Pawn_4'), nl, translate(S4,R4),
-		write('Positions for Pawn_4, position from a0 to f5'), nl,
-		read(S5), nl, write('OK Pawn_5'), nl, translate(S5,R5),
+		write('Which side do you want? s1.Up s2.Down s3.Left s4.Right'),nl,
+		read(Side),nl,write('Here is the new gameboard:'),translate(Side,S),
+		retractall(board(_,_,_)),
+		asserta(board(S,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
+		nl, afficherBoard, nl,
+		write('Position for Queen, place in the line 0 or line 1'), nl,
+		read(Reine), nl, translate(Reine,R),
+		write('Positions for Pawn_1,  place in the line 0 or line 1'), nl,
+		read(S1), nl, translate(S1,R1),
+		write('Positions for Pawn_2,  place in the line 0 or line 1'), nl,
+		read(S2), nl, translate(S2,R2),
+		write('Positions for Pawn_3,  place in the line 0 or line 1'), nl,
+		read(S3), nl, translate(S3,R3),
+		write('Positions for Pawn_4, place in the line 0 or line 1'), nl,
+		read(S4), nl, translate(S4,R4),
+		write('Positions for Pawn_5, place in the line 0 or line 1'), nl,
+		read(S5), nl, translate(S5,R5),
+		placementValid(R,R1,R2,R3,R4,R5),
 	    write('UserInitBoard Finish'), nl,
-		(HumainSide == 0,
+		(
+			HumainSide == 0,
 			retract(board(_,_,_)),%delete old empty board,
-			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,33, 35, 28, 20, 30, 13],0)), nl, afficherBoard
-			%TODO: an opening configuration!
+			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,33, 35, 28, 20, 30, 13],0)),
+			aiReact(BestAiReact),
+			append([R1,R2,R3,R4,R5,R],BestAiReact,InitBF),
+			retract(board(_,_,_)),%delete old empty board,
+			asserta(board(TerrainMap,InitBF,0)),write('AI initBoard completed'),
+			nl, afficherBoard
 		 ;
-		 HumainSide == 1,
+		 	HumainSide == 1,
+			% FIXME: 用户布局先要看到这个！！
+		 	aiInitBoard(AiOpening),
+			append(AiOpening,[R1,R2,R3,R4,R5,R],InitBF),
 		 	retract(board(_,_,_)),%delete old empty board,
-			asserta(board(TerrainMap,[44, 44, 44, 44, 44, 44,R1,R2,R3,R4,R5,R],0)), nl, afficherBoard
+			asserta(board(TerrainMap,InitBF,0)), nl,afficherBoard
 		),!.
  % User Move
 userMove(Side):-
@@ -342,6 +381,7 @@ userMoveFrom(Side,Position):-
 		write('Nope, can\'t move that piece'),nl,
 		userMoveFrom(Side,_) % retry
 	),!.
+
 userMoveTo(Side,Position):-
 	board(T,BF,_),
 	write('Where would you like to put it ?'),nl,
@@ -359,3 +399,26 @@ userMoveTo(Side,Position):-
 		write('Can\'t do that'),
 		userMoveTo(Side,_)
 	),!.
+
+aiInitBoard(AiOpening):-
+	openingLib(OpeningLib),
+	choose(OpeningLib,AiOpening).
+aiReact(BestAiReact):-
+	board(T,BF,_),
+	slice(1,6,BF,OpPieces),
+	reactLib(ReactLib),
+	findall(
+		[AiReact,V],
+		(
+			member(AiReact,ReactLib),
+			append(OpPieces,AiReact,InitBF),
+			retract(board(_,_,_)),%delete old empty board,
+			asserta(board(T,InitBF,0)),
+			minimax(0,3,0,V,_)
+		),
+		DB
+	),
+	regroup(DB,AiReacts,Vs),
+	max_list(Vs,BestVal),
+	indexOf(Vs,BestVal,MaxValInx),
+	nth0(MaxValInx,AiReacts,BestAiReact).

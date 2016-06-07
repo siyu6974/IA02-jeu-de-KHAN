@@ -61,3 +61,10 @@ subdistributer(H,[S|RList],[[H,S]|NextPair]):-
 regroup(L,L1,L2):-
     maplist(nth(1),L,L1),
     maplist(nth(2),L,L2).
+
+%% choose(List, Elt) - chooses a random element
+choose([], []).
+choose(List, Elt) :-
+    length(List, Length),
+    random(0, Length, Index),
+    nth0(Index, List, Elt),!.
