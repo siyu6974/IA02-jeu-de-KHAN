@@ -289,7 +289,22 @@ playerAskColor(HumainSide) :-
 		write('Error : This is not a valid side !'), nl,
 		playerAskColor(HumainSide)      % Ask again
 	),!.
-
+	
+placementValid(R,R1,R2,R3,R4,R5):-
+					(	
+						member(R,[0,1,2,3,4,5,6,7,8,9,10,11]),
+						member(R1,[0,1,2,3,4,5,6,7,8,9,10,11]),
+						member(R2,[0,1,2,3,4,5,6,7,8,9,10,11]),
+						member(R3,[0,1,2,3,4,5,6,7,8,9,10,11]),
+						member(R4,[0,1,2,3,4,5,6,7,8,9,10,11]),
+						member(R5,[0,1,2,3,4,5,6,7,8,9,10,11]),
+						write('OK'),nl % true if place in first two lines
+					;
+						write('Nope, can\'t place your chesses like that'),nl,
+						write('Entre "play" to restart!'),nl,
+						fail
+					),!.
+	
 playerInitBoard(HumainSide):-
 		terrainMap(TerrainMap),
 		asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
@@ -299,17 +314,18 @@ playerInitBoard(HumainSide):-
 		asserta(board(S,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
 		nl, afficherBoard, nl,
 		write('Position for Queen, place in the line o and line 1'), nl,
-	    read(Reine), nl, write('OK Queen'), nl, translate(Reine,R),
+		read(Reine), nl, translate(Reine,R),
 		write('Positions for Pawn_1,  place in the line o and line 1'), nl,
-		read(S1), nl, write('OK Pawn_1'), nl, translate(S1,R1),
+		read(S1), nl, translate(S1,R1),
 		write('Positions for Pawn_2,  place in the line o and line 1'), nl,
-		read(S2), nl, write('OK Pawn_2'), nl, translate(S2,R2),
+		read(S2), nl, translate(S2,R2),
 		write('Positions for Pawn_3,  place in the line o and line 1'), nl,
-		read(S3), nl, write('OK Pawn_3'), nl, translate(S3,R3),
+		read(S3), nl, translate(S3,R3),
 		write('Positions for Pawn_4, place in the line o and line 1'), nl,
-		read(S4), nl, write('OK Pawn_4'), nl, translate(S4,R4),
+		read(S4), nl, translate(S4,R4),
 		write('Positions for Pawn_5, place in the line o and line 1'), nl,
-		read(S5), nl, write('OK Pawn_5'), nl, translate(S5,R5),
+		read(S5), nl, translate(S5,R5),
+		placementValid(R,R1,R2,R3,R4,R5),
 	    write('UserInitBoard Finish'), nl,
 		(HumainSide == 0,
 			retract(board(_,_,_)),%delete old empty board,
@@ -335,7 +351,7 @@ playerInitBoard(HumainSide):-
 					regroup(AllPossibleMoves,CouldMove,_),
 					member(Position,CouldMove)% true if Pos can move
 				;
-					write('Nope, can\' move that'),nl,
+					write('Nope, can\'t move that'),nl,
 					userMove(Side) % retry
 				),!,
 				write('Where would you like to put it ?'),nl,
