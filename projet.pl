@@ -249,12 +249,13 @@ play :-
 	write('Copy Right of Siyu ZHANG & Mengjia SUI'), nl,
 	choosemode(Mode),
 	(
-		Mode =:= 1,
-		playerAskColor(HumainSide),playerInitBoard(HumainSide)
-		% TODO: 难度选择 参数见lib
+		Mode =:= 1, difficultity(Level),
+		playerChooseColor(HumainSide),boardPreparation(HumainSide),
+		start(0,HumainSide,0,Level)
 	;
-		Mode =:= 2
-		%TODO: pvp
+		Mode =:= 2,
+		boardPreparation(2),
+		start(0,_,1,_)
 	;
 		Mode =:= 3,
 		aiInitBoard(AiOpening),
@@ -262,33 +263,46 @@ play :-
 		translate(RandS,S),
 		append(AiOpening,[44,44,44,44,44,44],AfterOpening),
 		asserta(board(S,AfterOpening,0)),
-
 		aiReact(BestAiReact),
 		append(AiOpening,BestAiReact,InitBF),
 		retractall(board(_,_,_)),
 		asserta(board(S,InitBF,0)),
-		HumainSide = 3
-	),!,start(0,HumainSide).
-
-start(SideToPlay,HumainSide):-
+		HumainSide = 3, % absence of humain player, must never equal to SideToPlay, thus 3
+		start(0,HumainSide,0,3)
+	),!.
+%	start(SideToPlay,HumainSide,Pvp,DifficultityLevel) Pvp = 1 if pvp, 0 if not
+start(SideToPlay,_,1,_):-
+	Op is (SideToPlay+1) mod 2,
+	userMove(SideToPlay),
+	afficherBoard,
+	(
+		\+ gameOver(0), \+gameOver(1),start(Op,_,1,_)
+	;
+		nl,write('GAMEOVER')
+	),!.
+start(SideToPlay,HumainSide,0,L):-
 	Op is (SideToPlay+1) mod 2,
 	(
 		SideToPlay == HumainSide,
 		userMove(SideToPlay)
 	;
-		minimax(SideToPlay,4,1,_,BestMove),
+		minimax(SideToPlay,L,1,_,BestMove),
 		nth(1,BestMove,From),nth(2,BestMove,To),
 		move(From,SideToPlay,To)
 	),!,afficherBoard,
 	(
-		\+ gameOver(0), \+gameOver(1),start(Op,HumainSide)
+		\+ gameOver(0), \+gameOver(1),start(Op,HumainSide,0,L)
 	;
 		nl,write('GAMEOVER')
 	),!.
-
+difficultity(Level):-
+	write('Choose difficultity level. Type easy, normal, hard or challenge.'),
+	nl, write('( challenge mode requires lots of computing power, don\'t try this on a laptop!)'),
+	read(Difficultity),
+	translate(Difficultity,Level).
 %playAskColor
 % Ask the color for the human player and start the game with it.
-playerAskColor(HumainSide) :-
+playerChooseColor(HumainSide) :-
 	nl, write('Side for human player ? ("o" for first and "x" for second)'), nl,
 	read(Player), nl,
 	(
@@ -300,68 +314,105 @@ playerAskColor(HumainSide) :-
 	;
 	    % If not x or o -> not a valid color
 		write('Error : This is not a valid side !'), nl,
-		playerAskColor(HumainSide)      % Ask again
+		playerChooseColor(HumainSide)      % Ask again
 	),!.
 
-placementValid(R,R1,R2,R3,R4,R5):-
+placementValid(Order,R,R1,R2,R3,R4,R5):-
 	(
+		Order =:= 0, %humain moves first
 		member(R,[0,1,2,3,4,5,6,7,8,9,10,11]),
 		member(R1,[0,1,2,3,4,5,6,7,8,9,10,11]),
 		member(R2,[0,1,2,3,4,5,6,7,8,9,10,11]),
 		member(R3,[0,1,2,3,4,5,6,7,8,9,10,11]),
 		member(R4,[0,1,2,3,4,5,6,7,8,9,10,11]),
 		member(R5,[0,1,2,3,4,5,6,7,8,9,10,11]),
-		write('OK'),nl % true if place in first two lines
+		write('OK'),nl % true if placed in first two lines
+	;
+		Order =:= 1, % move second
+		member(R,[35,34,33,32,31,30,29,28,27,26,25,24]),
+		member(R1,[35,34,33,32,31,30,29,28,27,26,25,24]),
+		member(R2,[35,34,33,32,31,30,29,28,27,26,25,24]),
+		member(R3,[35,34,33,32,31,30,29,28,27,26,25,24]),
+		member(R4,[35,34,33,32,31,30,29,28,27,26,25,24]),
+		member(R5,[35,34,33,32,31,30,29,28,27,26,25,24]),
+		write('OK'),nl % true if placed in last two lines
 	;
 		write('Nope, can\'t place your pieces like that'),nl,
 		write('Entre "play." to restart!'),nl,
 		fail
 	),!.
+% boardPreparation(mode) 0 humain first, 1 cpu first, 2 pvp
+boardPreparation(1):-
+		aiInitBoard(AiOpening),
+		choose([s1,s2,s3,s4],RandS),
+		translate(RandS,S),
+		append(AiOpening,[44,44,44,44,44,44],AfterOpening),
+		asserta(board(S,AfterOpening,0)),
+		playerInitBoard(R,R1,R2,R3,R4,R5),
+		placementValid(1,R,R1,R2,R3,R4,R5),
+		write('UserInitBoard Finished'), nl,
+		append(AiOpening,[R1,R2,R3,R4,R5,R],InitBF),
+		retract(board(_,_,_)),%delete old empty board,
+		asserta(board(S,InitBF,0)), nl,afficherBoard.
+boardPreparation(0):-
+	terrainMap(TerrainMap),
+	asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
+	nl, afficherBoard, nl,
+	write('Which side do you want? s1.Up s2.Down s3.Left s4.Right'),nl,
+	read(Side),nl,write('Here is the new gameboard:'),translate(Side,S),
+	retractall(board(_,_,_)),
+	asserta(board(S,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
+	playerInitBoard(R,R1,R2,R3,R4,R5),
+	placementValid(0,R,R1,R2,R3,R4,R5),
+	write('UserInitBoard Finished'), nl,
+	retract(board(_,_,_)),%delete old empty board,
+	asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,33, 35, 28, 20, 30, 13],0)),
+	aiReact(BestAiReact),
+	append([R1,R2,R3,R4,R5,R],BestAiReact,InitBF),
+	retract(board(_,_,_)),%delete old empty board,
+	asserta(board(S,InitBF,0)),write('AI initBoard completed'),
+	nl, afficherBoard.
+boardPreparation(2):-
+	terrainMap(TerrainMap),
+	asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
+	nl, afficherBoard, nl,
+	write('Which side do you want? s1.Up s2.Down s3.Left s4.Right'),nl,
+	read(Side),nl,write('Here is the new gameboard:'),translate(Side,NewTerrainMap),
+	retractall(board(_,_,_)),
+	asserta(board(NewTerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
+	playerInitBoard(R,R1,R2,R3,R4,R5),
+	placementValid(0,R,R1,R2,R3,R4,R5),
+	retractall(board(_,_,_)),
+	asserta(board(NewTerrainMap,[R,R1,R2,R3,R4,R5,44, 44, 44, 44, 44, 44],0)),
+	write('User 1 InitBoard Finished'), nl,
+	write('User 2 InitBoard'), nl,
+	playerInitBoard(S,S1,S2,S3,S4,S5),
+	placementValid(1,S,S1,S2,S3,S4,S5),
+	write('User 2 InitBoard Finished'),nl,
+	append([R1,R2,R3,R4,R5,R],[S,S1,S2,S3,S4,S5],InitBF),
+	retract(board(_,_,_)),%delete old empty board,
+	asserta(board(NewTerrainMap,InitBF,0)),write('AI initBoard completed'),
+	nl, afficherBoard.
+flag.
+playerInitBoard(R,R1,R2,R3,R4,R5):-
+	nl, afficherBoard, nl,
+	write('Position for Queen, place in the line 0/1 if you move first, line 4/5 if not'), nl,
+	read(Reine), nl, translate(Reine,R),
+	write('Positions for Pawn_1, place in the line 0/1 if you move first, line 4/5 if not'), nl,
+	read(S1), nl, translate(S1,R1),
+	write('Positions for Pawn_2, place in the line 0/1 if you move first, line 4/5 if not'), nl,
+	read(S2), nl, translate(S2,R2),
+	write('Positions for Pawn_3, place in the line 0/1 if you move first, line 4/5 if not'), nl,
+	read(S3), nl, translate(S3,R3),
+	write('Positions for Pawn_4, place in the line 0/1 if you move first, line 4/5 if not'), nl,
+	read(S4), nl, translate(S4,R4),
+	write('Positions for Pawn_5, place in the line 0/1 if you move first, line 4/5 if not'), nl,
+	read(S5), nl, translate(S5,R5).
 
-playerInitBoard(HumainSide):-
-		terrainMap(TerrainMap),
-		asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
-		nl, afficherBoard, nl,
-		write('Which side do you want? s1.Up s2.Down s3.Left s4.Right'),nl,
-		read(Side),nl,write('Here is the new gameboard:'),translate(Side,S),
-		retractall(board(_,_,_)),
-		asserta(board(S,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
-		nl, afficherBoard, nl,
-		write('Position for Queen, place in the line 0 or line 1'), nl,
-		read(Reine), nl, translate(Reine,R),
-		write('Positions for Pawn_1,  place in the line 0 or line 1'), nl,
-		read(S1), nl, translate(S1,R1),
-		write('Positions for Pawn_2,  place in the line 0 or line 1'), nl,
-		read(S2), nl, translate(S2,R2),
-		write('Positions for Pawn_3,  place in the line 0 or line 1'), nl,
-		read(S3), nl, translate(S3,R3),
-		write('Positions for Pawn_4, place in the line 0 or line 1'), nl,
-		read(S4), nl, translate(S4,R4),
-		write('Positions for Pawn_5, place in the line 0 or line 1'), nl,
-		read(S5), nl, translate(S5,R5),
-		placementValid(R,R1,R2,R3,R4,R5),
-	    write('UserInitBoard Finish'), nl,
-		(
-			HumainSide == 0,
-			retract(board(_,_,_)),%delete old empty board,
-			asserta(board(TerrainMap,[R1,R2,R3,R4,R5,R,33, 35, 28, 20, 30, 13],0)),
-			aiReact(BestAiReact),
-			append([R1,R2,R3,R4,R5,R],BestAiReact,InitBF),
-			retract(board(_,_,_)),%delete old empty board,
-			asserta(board(TerrainMap,InitBF,0)),write('AI initBoard completed'),
-			nl, afficherBoard
-		 ;
-		 	HumainSide == 1,
-			% FIXME: 用户布局先要看到这个！！
-		 	aiInitBoard(AiOpening),
-			append(AiOpening,[R1,R2,R3,R4,R5,R],InitBF),
-		 	retract(board(_,_,_)),%delete old empty board,
-			asserta(board(TerrainMap,InitBF,0)), nl,afficherBoard
-		),!.
- % User Move
+% User Move
 userMove(Side):-
-	userMoveFrom(Side,_),
-	userMoveTo(Side,_).
+	userMoveFrom(Side,From),
+	userMoveTo(Side,From).
 
 userMoveFrom(Side,Position):-
 	nl, write('It\'s your turn !'), nl,
@@ -383,6 +434,7 @@ userMoveFrom(Side,Position):-
 
 userMoveTo(Side,Position):-
 	board(T,BF,_),
+	flag,
 	write('Where would you like to put it ?'),nl,
 	read(Dest),nl, translate(Dest, Destination),
 	(
@@ -395,8 +447,8 @@ userMoveTo(Side,Position):-
 		member(Destination,GardenTomb),
 		resurrect(Side,Destination)
 	;
-		write('Can\'t do that'),
-		userMoveTo(Side,_)
+		write('Can\'t do that'),nl,
+		userMoveTo(Side,Position)
 	),!.
 
 aiInitBoard(AiOpening):-
