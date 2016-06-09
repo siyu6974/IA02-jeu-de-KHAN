@@ -3,13 +3,9 @@
 :- include('jeuDeKHAN_lib.pl').
 :- include('translatedic.pl').
 :- include('opening.pl').
+:- include('jeuAI.pl').
 :- dynamic(board/3).
 terrainMap([2,3,1,2,2,3,2,1,3,1,3,1,1,3,2,3,1,2,3,1,2,1,3,2,2,3,1,3,1,3,2,1,3,2,2,1]).
-printMatrix([],_).
-printMatrix(L,0) :- nl,write(' '),printMatrix(L,6),!.
-printMatrix([H|T],Count) :- write(' '),write(H),  Next is Count-1, printMatrix(T,Next),!.
-printLineNumber(6,_):-!.
-printLineNumber(Line,BF) :- nl, write(Line), write(' '), printBattleField(Line,0,BF).
 
 printBattleField(-1,0,BF) :-
 	nl, write('  A B C D E F'),  printLineNumber(0,BF),!.
@@ -44,14 +40,14 @@ afficherBoard:-
 	nl, printBattleField(-1,0,BF),nl,write('   '),
 	printDeadPiece(BF),!,nl,write('KHAN = '),write(KHAN),nl,nl.
 
-
 initBoard :-
 	terrainMap(TerrainMap),
     % asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],1)).
-	asserta(board(TerrainMap,[44,44,44,5,13,11, 44, 44, 44, 44, 44, 29],3)).
+	asserta(board(TerrainMap,[44,44,44,5,13,11, 44, 44, 44, 44, 44, 29],2)).
 
-% allPossibleMove(Side,Result)
-allPossibleMove(Side,AllPossibleMoves):-
+% -------------------------------Game Rule.------------------------------------
+% allPossibleMoves(Side,Result)
+allPossibleMoves(Side,AllPossibleMoves):-
 	board(TerrainMap,BF,KHAN),
 	(
 		Side == 0,slice(1,6,BF,Camarades)
@@ -150,97 +146,12 @@ resurrect(Side,Dest):-
 	retract(board(_,BF,_)),%delete old board,
 	asserta(board(TerrainMap,FinBF,KHAN)),!.
 
-minimax(Side,0,Max,Val,_):-
-	board(_,BF,_),
-	SideAbs is (Side+Max+1) mod 2,
-	evaluate(SideAbs,BF,Val,0),!.
-minimax(Side,_,1,BestVal,_):-
-	gameOver(Side),
-	BestVal is -1000,!.
-minimax(Side,_,0,BestVal,_):-
-	gameOver(Side),
-	BestVal is 1000,!.
-% minimax(Side,Depth,1,Val,BestMove) SideAbs === initial Side
-minimax(Side,Depth,Max,BestVal,BestMove):-
-	allPossibleMove(Side,PossibleMoves),
-	findall(
-		[RetrievedVal,APossibleMove],
-		(
-			member(APossibleMove,PossibleMoves),
-			board(TerrainMap,BF,KHAN),
-			nth(1,APossibleMove,From),nth(2,APossibleMove,To),
-			move(From,Side,To),
-			Op is (Side+1) mod 2,
-			Min is (Max+1) mod 2,
-			Deeper is Depth - 1,
-			minimax(Op,Deeper,Min,RetrievedVal,_),
-			retractall(board(_,_,_)),asserta(board(TerrainMap,BF,KHAN)) %clone
-		),
-		ValMovePairs
-	),
-	regroup(ValMovePairs,Vals,Moves),
-	(
-		Max == 1,
-		max_list(Vals,BestVal),
-		indexOf(Vals,BestVal,MaxValInx),
-		nth0(MaxValInx,Moves,BestMove)
-		;
-		min_list(Vals,BestVal),
-		indexOf(Vals,BestVal,MinValInx),
-		nth0(MinValInx,Moves,BestMove)
-	),!.
-
 gameOver(0):-
 	board(_,BF,_),nth(6,BF,Q),Q==44.
 gameOver(1):-
 	board(_,BF,_),nth(12,BF,Q),Q==44.
 
-% evaluate(Side,BF,Val,0)
-evaluate(Side,BF,Val,Flag):-
-	(
-		Side == 0,slice(1,6,BF,Camarades)
-	;
-		slice(7,12,BF,Camarades)
-	),!,
-	nth(6,Camarades,Q),
-	(
-		Q < 44,
-		Vq is 995 %Queen is worth actually 1000, of which 5 from countPawns
-	;
-		Vq is 0
-	),!,
-	countPawns(Camarades,Vpawns),
-	VSelf is Vq+Vpawns,
-	Opponent is (Side+1) mod 2,
-	(
-		Flag == 1,
-		Val is VSelf
-	;
-		evaluate(Opponent,BF,ValOp,1),
-		Val is VSelf - ValOp
-	),!.
-
-countPawns([],0).
-countPawns([Camarade|Rest],Return):-
-	countPawns(Rest,V),
-	(
-		Camarade < 44,
-		Return is V+5
-	;
-	Return is V
-	),!.
-
-% UI.
-choosemode(Mode):-
-	write('Choose the mode of play:' ), nl,
-	write('1. Human VS Computer'),nl,
-	write('2. Human VS Human'),nl,
-	write('3. Computer VS Computer'),nl,read(Mode).
-test:-
-	terrainMap(TerrainMap),
-	asserta(board(TerrainMap,[0,1,11,5,6,3, 30, 31, 27, 29, 25, 35],0)),
-	afficherBoard,start(0,0).
-
+% -------------------------------UI/UE-------------------------------------------
 play :-
     nl,retractall(board(_,_,_)),
     write('======================================'), nl,
@@ -267,10 +178,15 @@ play :-
 		append(AiOpening,BestAiReact,InitBF),
 		retractall(board(_,_,_)),
 		asserta(board(S,InitBF,0)),
-		HumainSide = 3, % absence of humain player, must never equal to SideToPlay, thus 3
-		start(0,HumainSide,0,3)
+ 	% absence of humain player, must never equal to SideToPlay, thus 3
+		start(0,3,0,3)
 	),!.
 %	start(SideToPlay,HumainSide,Pvp,DifficultityLevel) Pvp = 1 if pvp, 0 if not
+choosemode(Mode):-
+	write('Choose the mode of play:' ), nl,
+	write('1. Human VS Computer'),nl,
+	write('2. Human VS Human'),nl,
+	write('3. Computer VS Computer'),nl,read(Mode).
 start(SideToPlay,_,1,_):-
 	Op is (SideToPlay+1) mod 2,
 	userMove(SideToPlay),
@@ -278,7 +194,7 @@ start(SideToPlay,_,1,_):-
 	(
 		\+ gameOver(0), \+gameOver(1),start(Op,_,1,_)
 	;
-		nl,write('GAMEOVER')
+		nl,write('GAMEOVER'),retractall(board(_,_,_))
 	),!.
 start(SideToPlay,HumainSide,0,L):-
 	Op is (SideToPlay+1) mod 2,
@@ -293,14 +209,14 @@ start(SideToPlay,HumainSide,0,L):-
 	(
 		\+ gameOver(0), \+gameOver(1),start(Op,HumainSide,0,L)
 	;
-		nl,write('GAMEOVER')
+		nl,write('GAMEOVER'),retractall(board(_,_,_))
 	),!.
 difficultity(Level):-
 	write('Choose difficultity level. Type easy, normal, hard or challenge.'),
 	nl, write('( challenge mode requires lots of computing power, don\'t try this on a laptop!)'),
-	read(Difficultity),
-	translate(Difficultity,Level).
-%playAskColor
+	nl,read(Difficultity),
+	translateD(Difficultity,Level).
+%playerChooseColor
 % Ask the color for the human player and start the game with it.
 playerChooseColor(HumainSide) :-
 	nl, write('Side for human player ? ("o" for first and "x" for second)'), nl,
@@ -342,23 +258,11 @@ placementValid(Order,R,R1,R2,R3,R4,R5):-
 		fail
 	),!.
 % boardPreparation(mode) 0 humain first, 1 cpu first, 2 pvp
-boardPreparation(1):-
-		aiInitBoard(AiOpening),
-		choose([s1,s2,s3,s4],RandS),
-		translate(RandS,S),
-		append(AiOpening,[44,44,44,44,44,44],AfterOpening),
-		asserta(board(S,AfterOpening,0)),
-		playerInitBoard(R,R1,R2,R3,R4,R5),
-		placementValid(1,R,R1,R2,R3,R4,R5),
-		write('UserInitBoard Finished'), nl,
-		append(AiOpening,[R1,R2,R3,R4,R5,R],InitBF),
-		retract(board(_,_,_)),%delete old empty board,
-		asserta(board(S,InitBF,0)), nl,afficherBoard.
 boardPreparation(0):-
 	terrainMap(TerrainMap),
 	asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
 	nl, afficherBoard, nl,
-	write('Which side do you want? s1.Up s2.Down s3.Left s4.Right'),nl,
+	write('Which side do you want? s1.Top s2.Buttom s3.Left s4.Right'),nl,
 	read(Side),nl,write('Here is the new gameboard:'),translate(Side,S),
 	retractall(board(_,_,_)),
 	asserta(board(S,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
@@ -372,6 +276,18 @@ boardPreparation(0):-
 	retract(board(_,_,_)),%delete old empty board,
 	asserta(board(S,InitBF,0)),write('AI initBoard completed'),
 	nl, afficherBoard.
+boardPreparation(1):-
+		aiInitBoard(AiOpening),
+		choose([s1,s2,s3,s4],RandS),
+		translate(RandS,S),
+		append(AiOpening,[44,44,44,44,44,44],AfterOpening),
+		asserta(board(S,AfterOpening,0)),
+		playerInitBoard(R,R1,R2,R3,R4,R5),
+		placementValid(1,R,R1,R2,R3,R4,R5),
+		write('UserInitBoard Finished'), nl,
+		append(AiOpening,[R1,R2,R3,R4,R5,R],InitBF),
+		retract(board(_,_,_)),%delete old empty board,
+		asserta(board(S,InitBF,0)), nl,afficherBoard.
 boardPreparation(2):-
 	terrainMap(TerrainMap),
 	asserta(board(TerrainMap,[44,44,44,44,44,44,44, 44, 44, 44, 44, 44],0)),
@@ -393,7 +309,7 @@ boardPreparation(2):-
 	retract(board(_,_,_)),%delete old empty board,
 	asserta(board(NewTerrainMap,InitBF,0)),write('AI initBoard completed'),
 	nl, afficherBoard.
-flag.
+
 playerInitBoard(R,R1,R2,R3,R4,R5):-
 	nl, afficherBoard, nl,
 	write('Position for Queen, place in the line 0/1 if you move first, line 4/5 if not'), nl,
@@ -409,14 +325,27 @@ playerInitBoard(R,R1,R2,R3,R4,R5):-
 	write('Positions for Pawn_5, place in the line 0/1 if you move first, line 4/5 if not'), nl,
 	read(S5), nl, translate(S5,R5).
 
+generateHint(AllPossibleMoves,Hints):-
+	setof(
+		Hint,
+		MoveablePiece^FDPair^(
+			member(FDPair,AllPossibleMoves),
+			nth(1,FDPair,MoveablePiece),
+			translate(Hint,MoveablePiece) %machine readable->humain readable
+		),
+		Hints
+	).
 % User Move
 userMove(Side):-
 	userMoveFrom(Side,From),
 	userMoveTo(Side,From).
 
 userMoveFrom(Side,Position):-
+	allPossibleMoves(Side,AllPossibleMoves),
+	generateHint(AllPossibleMoves,Hints),
 	nl, write('It\'s your turn !'), nl,
-    write('Which one would you want to move ? 44 for resurrection'), nl,
+  write('Which one would you want to move ? 44 for resurrection'), nl,
+	write('Hint:  '), write(Hints),nl,
 	read(Pos),nl, translate(Pos, Position),
 	board(_,BF,_),
 	(
@@ -424,7 +353,7 @@ userMoveFrom(Side,Position):-
 		resurrectionTarget(BF,Side,_) %true if can resurrect
 	;
 		%nothing to resurrect or moving normally
-		allPossibleMove(Side,AllPossibleMoves),
+		allPossibleMoves(Side,AllPossibleMoves),
 		regroup(AllPossibleMoves,CouldMove,_),
 		member(Position,CouldMove)% true if Pos can move
 	;
@@ -434,7 +363,6 @@ userMoveFrom(Side,Position):-
 
 userMoveTo(Side,Position):-
 	board(T,BF,_),
-	flag,
 	write('Where would you like to put it ?'),nl,
 	read(Dest),nl, translate(Dest, Destination),
 	(
@@ -450,26 +378,3 @@ userMoveTo(Side,Position):-
 		write('Can\'t do that'),nl,
 		userMoveTo(Side,Position)
 	),!.
-
-aiInitBoard(AiOpening):-
-	openingLib(OpeningLib),
-	choose(OpeningLib,AiOpening).
-aiReact(BestAiReact):-
-	board(T,BF,_),
-	slice(1,6,BF,OpPieces),
-	reactLib(ReactLib),
-	findall(
-		[AiReact,V],
-		(
-			member(AiReact,ReactLib),
-			append(OpPieces,AiReact,InitBF),
-			retract(board(_,_,_)),%delete old empty board,
-			asserta(board(T,InitBF,0)),
-			minimax(0,3,0,V,_)
-		),
-		DB
-	),
-	regroup(DB,AiReacts,Vs),
-	max_list(Vs,BestVal),
-	indexOf(Vs,BestVal,MaxValInx),
-	nth0(MaxValInx,AiReacts,BestAiReact).

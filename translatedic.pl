@@ -47,7 +47,9 @@ translate(s2,[1,2,2,3,1,2,3,1,3,1,3,2,2,3,1,2,1,3,2,1,3,2,3,1,1,3,1,3,1,2,3,2,2,
 translate(s3,[2,2,3,1,2,2,1,3,1,3,1,3,3,1,2,2,3,1,2,3,1,3,1,2,2,1,3,1,3,2,1,3,2,2,1,3]).
 translate(s4,[3,1,2,2,3,1,2,3,1,3,1,2,2,1,3,1,3,2,1,3,2,2,1,3,3,1,3,1,3,1,2,2,1,3,2,2]).
 
-translate(easy,2).
-translate(normal,3).
-translate(hard,4).
-translate(challenge,5).
+% In generateHint, translate is used in the opposite way(machine readable->humain readable),
+% to avoid 2 can be either easy or c0, it is necessary to use another name for difficultity tranlation.
+translateD(easy,2).
+translateD(normal,3).
+translateD(hard,4).
+translateD(challenge,5).

@@ -1,9 +1,9 @@
+% ---------------Supporting Predicate------------
 % oppositeNb(1,Y).
 oppositeNb(X,Y):- Y is -X.
 
 max(A,B,A):-A>=B.
 max(A,B,B):-B>A.
-
 min(A,B,A):-A=<B.
 min(A,B,B):-B<A.
 
@@ -15,20 +15,23 @@ slice(Start,End,[_|T],Sublist) :-
     Start > 1, StartT is Start - 1,
     EndT is End - 1, slice(StartT,EndT,T,Sublist).
 
-%start at 0
+%start at 0, indexOf(List,Element,Index)
 indexOf([Element|_], Element, 0).
 indexOf([_|Tail], Element, Index):-
 	  indexOf(Tail, Element, Index1),
 	  Index is Index1+1.
 
 mapFunc(Target,NewValue,N,Return):-
-    (N=:=Target,Return is NewValue,!;
+  (N=:=Target,Return is NewValue,!;
 	Return is N).
 
+% modifyList scans the List, changing the first case whose value is Target to NewValue,
+% and returns NewList
 modifyList(Target,NewValue,List,NewList):-
     maplist(mapFunc(Target,NewValue),List,NewList).
 
-% modifyList2(Index,Dest,List,Result,Count):-
+% modifyList2(Index,Dest,List,Result,Count)
+% changes List[Index] to Dest, returns Result.
 modifyList2(_,_,_,[],12).
 modifyList2(Index,Dest,[E|Q1],[R|Q2],Count):-
 	(
@@ -58,13 +61,20 @@ subdistributer(_,[],[]):-!.
 subdistributer(H,[S|RList],[[H,S]|NextPair]):-
     subdistributer(H,RList,NextPair).
 
+% regroup([L1,L2],L1,L2) 
 regroup(L,L1,L2):-
     maplist(nth(1),L,L1),
     maplist(nth(2),L,L2).
 
-%% choose(List, Elt) - chooses a random element
+% choose(List, Elt) - chooses a random element
 choose([], []).
 choose(List, Elt) :-
     length(List, Length),
     random(0, Length, Index),
     nth0(Index, List, Elt),!.
+
+printMatrix([],_).
+printMatrix(L,0) :- nl,write(' '),printMatrix(L,6),!.
+printMatrix([H|T],Count) :- write(' '),write(H),  Next is Count-1, printMatrix(T,Next),!.
+printLineNumber(6,_):-!.
+printLineNumber(Line,BF) :- nl, write(Line), write(' '), printBattleField(Line,0,BF).
