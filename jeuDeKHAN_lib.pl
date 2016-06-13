@@ -1,4 +1,4 @@
-% ---------------Supporting Predicate------------
+% ----------------------------Supporting Predicate--------------------------
 % oppositeNb(1,Y).
 oppositeNb(X,Y):- Y is -X.
 
@@ -61,7 +61,7 @@ subdistributer(_,[],[]):-!.
 subdistributer(H,[S|RList],[[H,S]|NextPair]):-
     subdistributer(H,RList,NextPair).
 
-% regroup([L1,L2],L1,L2) 
+% regroup([L1,L2],L1,L2)
 regroup(L,L1,L2):-
     maplist(nth(1),L,L1),
     maplist(nth(2),L,L2).
