@@ -78,7 +78,7 @@ countPawns([Camarade|Rest],Return):-
 mobilityScore(Side,Return):-
 	allPossibleMoves(Side,AllPossibleMoves),
 	length(AllPossibleMoves,Len),
-	Return is Len*0.2.
+	Return is Len*0.3.
 
 aiInitBoard(AiOpening):-
 	openingLib(OpeningLib),

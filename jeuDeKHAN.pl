@@ -157,7 +157,7 @@ play :-
     write('======================================'), nl,
 	write('========== Prolog Jeu de KHAN ========'), nl,
 	write('======================================'), nl, nl,
-	write('Copy Right of Siyu ZHANG & Mengjia SUI'), nl,
+	write('Creation of Siyu ZHANG & Mengjia SUI'), nl,
 	choosemode(Mode),
 	(
 		Mode =:= 1, difficultity(Level),
