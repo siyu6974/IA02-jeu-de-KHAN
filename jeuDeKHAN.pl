@@ -40,6 +40,7 @@ afficherBoard:-
 	nl, printBattleField(-1,0,BF),nl,write('   '),
 	printDeadPiece(BF),!,nl,write('KHAN = '),write(KHAN),nl,nl.
 
+% for debug only
 initBoard :-
 	terrainMap(TerrainMap),
     % asserta(board(TerrainMap,[44,44,44,44,14,11, 44, 44, 44, 44, 1, 29],1)).
@@ -134,6 +135,7 @@ resurrectionPosition(BF,TerrainMap,KHAN,GardenTomb):-
 		Tmp
 	),
 	subtract(Tmp,BF,GardenTomb).
+
 % tryResurrect: wraps resurrectionTarget and resurrectionPosition
 tryResurrect(Side,GardenTomb):-
 	board(T,BF,KHAN),
@@ -156,8 +158,8 @@ play :-
     nl,retractall(board(_,_,_)),
     write('======================================'), nl,
 	write('========== Prolog Jeu de KHAN ========'), nl,
-	write('======================================'), nl, nl,
-	write('Creation of Siyu ZHANG & Mengjia SUI'), nl,
+	write('======================================'), nl,
+	write('Creation of Siyu ZHANG & Mengjia SUI'), nl,nl,
 	choosemode(Mode),
 	(
 		Mode =:= 1, difficultity(Level),
